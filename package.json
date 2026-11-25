@@ -1,0 +1,39 @@
+{
+  "name": "scamshield-ai",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "dev": "concurrently -n API,WEB -c blue,cyan \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:client": "vite",
+    "dev:server": "tsx watch server/index.ts",
+    "start": "node dist-server/index.js",
+    "start:server": "tsx server/index.ts",
+    "typecheck": "tsc -b && tsc -p tsconfig.server.json --noEmit",
+    "build": "tsc -b && vite build && tsc -p tsconfig.server.build.json",
+    "preview": "vite preview",
+    "test": "tsx --test tests/analyzeMessage.test.ts tests/analyzeUrl.test.ts tests/i18nCompleteness.test.ts tests/uiRender.test.tsx tests/productionServing.test.ts"
+  },
+  "dependencies": {
+    "@google/genai": "^3.6.1",
+    "dotenv": "^17.3.1",
+    "express": "^5.1.0",
+    "lucide-react": "^0.511.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.3",
+    "@types/react": "^19.1.2",
+    "@types/react-dom": "^19.1.2",
+    "@vitejs/plugin-react": "^4.4.1",
+    "concurrently": "^9.1.2",
+    "tailwindcss": "^4.1.7",
+    "typescript": "~5.8.3",
+    "vite": "^6.3.5"
+  }
+}
