@@ -39,6 +39,7 @@ import type { MessageDraft } from '../App';
 import { t, translations } from '../i18n/translations';
 import { sampleMessageFillers } from '../data/demoData';
 import { RiskGauge } from '../components/RiskGauge';
+import { apiUrl } from '../utils/api';
 
 interface MessageScannerPageProps {
   lang: Language;
@@ -71,7 +72,7 @@ export const MessageScannerPage: React.FC<MessageScannerPageProps> = ({
   const fetchHealth = useCallback(async () => {
     setCheckingHealth(true);
     try {
-      const res = await fetch('/api/health');
+      const res = await fetch(apiUrl('/api/health'));
       if (!res.ok) {
         setHealth({ ok: false, aiConfigured: false, model: null, unreachable: true });
         return;
@@ -110,7 +111,7 @@ export const MessageScannerPage: React.FC<MessageScannerPageProps> = ({
       const timeoutId = window.setTimeout(() => controller.abort(), 50_000);
 
       try {
-        const res = await fetch('/api/analyze-message', {
+        const res = await fetch(apiUrl('/api/analyze-message'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           signal: controller.signal,

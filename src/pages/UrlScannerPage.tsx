@@ -29,6 +29,7 @@ import type {
 import { t, translations } from '../i18n/translations';
 import { sampleUrlFillers } from '../data/demoData';
 import { RiskGauge } from '../components/RiskGauge';
+import { apiUrl } from '../utils/api';
 
 interface UrlScannerPageProps {
   lang: Language;
@@ -106,7 +107,7 @@ export const UrlScannerPage: React.FC<UrlScannerPageProps> = ({ lang }) => {
   const fetchHealth = useCallback(async () => {
     setCheckingHealth(true);
     try {
-      const res = await fetch('/api/health');
+      const res = await fetch(apiUrl('/api/health'));
       if (!res.ok) {
         setHealth({
           ok: false,
@@ -197,7 +198,7 @@ export const UrlScannerPage: React.FC<UrlScannerPageProps> = ({ lang }) => {
     const timeoutId = window.setTimeout(() => controller.abort(), 15_000);
 
     try {
-      const res = await fetch('/api/analyze-url', {
+      const res = await fetch(apiUrl('/api/analyze-url'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         signal: controller.signal,

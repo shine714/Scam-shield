@@ -2,6 +2,10 @@
 
 > **Bilingual AI-Powered Scam & Phishing Detection Platform (English / हिन्दी)**
 
+**Live Deployments:**
+- **Full-Stack App (Frontend + Backend API):** https://scam-shield-ipqq.onrender.com
+- **GitHub Pages UI (Connected to Backend API):** https://shine714.github.io/Scam-shield/
+
 ScamShield AI is a full-stack cybersecurity web application designed to help everyday internet and digital-payment users detect suspicious SMS, WhatsApp messages, emails, and deceptive URLs **before** clicking links, sharing OTPs, or transferring money.
 
 ---

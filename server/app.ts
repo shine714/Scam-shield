@@ -61,10 +61,35 @@ function localizedError(
 export function createApp(deps: AppDependencies = {}): Express {
   const app = express();
   app.disable('x-powered-by');
-  app.use((_req: Request, res: Response, next: NextFunction) => {
+  const allowedOrigins = new Set([
+    'https://shine714.github.io',
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+    ...(process.env.CORS_ORIGIN
+      ? process.env.CORS_ORIGIN.split(',')
+          .map((o) => o.trim())
+          .filter(Boolean)
+      : []),
+  ]);
+
+  app.use((req: Request, res: Response, next: NextFunction) => {
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('X-Frame-Options', 'DENY');
     res.setHeader('Referrer-Policy', 'no-referrer');
+
+    const origin = req.headers.origin;
+    if (origin && allowedOrigins.has(origin)) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+      res.setHeader('Vary', 'Origin');
+      res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    }
+
+    if (req.method === 'OPTIONS' && req.path.startsWith('/api')) {
+      res.status(204).end();
+      return;
+    }
+
     next();
   });
   const analyzer = deps.analyzer ?? createGeminiMessageAnalyzer();
