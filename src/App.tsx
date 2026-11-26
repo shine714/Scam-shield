@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { Language, PageRoute } from './types';
+import type { Language, MessageChannel, PageRoute } from './types';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { LandingPage } from './pages/LandingPage';
@@ -7,6 +7,12 @@ import { MessageScannerPage } from './pages/MessageScannerPage';
 import { UrlScannerPage } from './pages/UrlScannerPage';
 import { ScamAwarenessSection } from './components/ScamAwarenessSection';
 import { AboutPage } from './pages/AboutPage';
+
+export interface MessageDraft {
+  text: string;
+  channel: MessageChannel;
+  autoRun?: boolean;
+}
 
 const VALID_ROUTES: PageRoute[] = [
   'home',
@@ -33,6 +39,7 @@ function getInitialLang(): Language {
 export function App() {
   const [currentPage, setCurrentPage] = useState<PageRoute>(getInitialRoute);
   const [lang, setLang] = useState<Language>(getInitialLang);
+  const [messageDraft, setMessageDraft] = useState<MessageDraft | null>(null);
 
   useEffect(() => {
     const onHashChange = () => {
@@ -59,8 +66,13 @@ export function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleQuickAnalyzeMessage = (text: string, channel: MessageChannel) => {
+    setMessageDraft({ text, channel, autoRun: true });
+    navigateTo('message-scanner');
+  };
+
   return (
-    <div className="relative flex min-h-screen flex-col bg-[#040914] text-slate-100 cyber-grid">
+    <div className="relative flex min-h-screen flex-col bg-[#0B1220] text-slate-100 cyber-grid">
       <div className="pointer-events-none fixed inset-0 cyber-radial" />
 
       <div className="relative z-10 flex min-h-screen flex-col">
@@ -74,10 +86,18 @@ export function App() {
         <main className="flex-1">
           <div key={currentPage} className="animate-fade-in-up">
             {currentPage === 'home' && (
-              <LandingPage lang={lang} onNavigate={navigateTo} />
+              <LandingPage
+                lang={lang}
+                onNavigate={navigateTo}
+                onQuickAnalyzeMessage={handleQuickAnalyzeMessage}
+              />
             )}
             {currentPage === 'message-scanner' && (
-              <MessageScannerPage lang={lang} />
+              <MessageScannerPage
+                lang={lang}
+                initialDraft={messageDraft}
+                onConsumeDraft={() => setMessageDraft(null)}
+              />
             )}
             {currentPage === 'url-scanner' && <UrlScannerPage lang={lang} />}
             {currentPage === 'awareness' && (

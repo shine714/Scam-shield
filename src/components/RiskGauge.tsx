@@ -25,7 +25,7 @@ export const RiskGauge: React.FC<RiskGaugeProps> = ({
   label,
   badgeText,
 }) => {
-  const radius = 48;
+  const radius = 50;
   const circumference = 2 * Math.PI * radius;
   const clamped = Math.max(0, Math.min(100, score));
   const strokeDashoffset = circumference - (clamped / 100) * circumference;
@@ -36,22 +36,25 @@ export const RiskGauge: React.FC<RiskGaugeProps> = ({
     tier === 'high'
       ? {
           stroke: '#fb7185',
-          glow: 'rgba(251, 113, 133, 0.35)',
+          glow: 'rgba(251, 113, 133, 0.45)',
           badge: 'border-rose-500/40 bg-rose-500/15 text-rose-300',
           text: 'text-rose-400',
+          ringBg: 'from-rose-500/15 to-transparent border-rose-500/25',
         }
       : tier === 'medium'
         ? {
             stroke: '#fbbf24',
-            glow: 'rgba(251, 191, 36, 0.3)',
+            glow: 'rgba(251, 191, 36, 0.35)',
             badge: 'border-amber-500/40 bg-amber-500/15 text-amber-300',
             text: 'text-amber-400',
+            ringBg: 'from-amber-500/15 to-transparent border-amber-500/25',
           }
         : {
-            stroke: '#34d399',
-            glow: 'rgba(52, 211, 153, 0.3)',
+            stroke: '#22c55e',
+            glow: 'rgba(22, 163, 74, 0.4)',
             badge: 'border-emerald-500/40 bg-emerald-500/15 text-emerald-300',
             text: 'text-emerald-400',
+            ringBg: 'from-emerald-500/15 to-transparent border-emerald-500/25',
           };
 
   const defaultBadge =
@@ -60,20 +63,31 @@ export const RiskGauge: React.FC<RiskGaugeProps> = ({
       : t(translations.messageRiskLevels[riskLevel], lang);
 
   return (
-    <div className="flex flex-col items-center justify-center rounded-2xl border border-slate-800/90 bg-[#060E20]/80 p-5 text-center">
-      <div className="relative flex h-32 w-32 items-center justify-center">
-        <svg className="h-32 w-32 -rotate-90 transform" viewBox="0 0 120 120">
+    <div
+      className={`flex h-full flex-col items-center justify-center rounded-2xl border bg-gradient-to-b bg-[#111827] p-5 text-center shadow-inner ${palette.ringBg}`}
+    >
+      <div className="relative flex h-36 w-36 items-center justify-center">
+        <svg className="h-36 w-36 -rotate-90 transform" viewBox="0 0 124 124">
           <circle
-            cx="60"
-            cy="60"
+            cx="62"
+            cy="62"
+            r="56"
+            fill="none"
+            stroke="rgba(56, 189, 248, 0.12)"
+            strokeWidth="1"
+            strokeDasharray="3 4"
+          />
+          <circle
+            cx="62"
+            cy="62"
             r={radius}
             fill="none"
             stroke="rgba(30, 41, 59, 0.9)"
             strokeWidth="10"
           />
           <circle
-            cx="60"
-            cy="60"
+            cx="62"
+            cy="62"
             r={radius}
             fill="none"
             stroke={palette.stroke}
@@ -83,7 +97,7 @@ export const RiskGauge: React.FC<RiskGaugeProps> = ({
             strokeDashoffset={strokeDashoffset}
             style={{
               transition: 'stroke-dashoffset 650ms cubic-bezier(0.22, 1, 0.36, 1)',
-              filter: `drop-shadow(0 0 8px ${palette.glow})`,
+              filter: `drop-shadow(0 0 10px ${palette.glow})`,
             }}
           />
         </svg>

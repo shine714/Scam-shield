@@ -1,9 +1,11 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   AlertCircle,
   AlertTriangle,
+  Check,
   CheckCircle2,
   Clock,
+  Copy,
   CreditCard,
   Eraser,
   Gift,
@@ -16,6 +18,7 @@ import {
   MessageSquare,
   MessageSquareWarning,
   RefreshCw,
+  RotateCcw,
   ScanSearch,
   ServerCrash,
   ShieldAlert,
@@ -32,22 +35,28 @@ import type {
   MessageChannel,
   MessagePatternIndicators,
 } from '../types';
+import type { MessageDraft } from '../App';
 import { t, translations } from '../i18n/translations';
 import { sampleMessageFillers } from '../data/demoData';
 import { RiskGauge } from '../components/RiskGauge';
 
 interface MessageScannerPageProps {
   lang: Language;
+  initialDraft?: MessageDraft | null;
+  onConsumeDraft?: () => void;
 }
 
 const MAX_MESSAGE_LENGTH = 5000;
 
 export const MessageScannerPage: React.FC<MessageScannerPageProps> = ({
   lang,
+  initialDraft,
+  onConsumeDraft,
 }) => {
   const [channel, setChannel] = useState<MessageChannel>('sms');
   const [messageText, setMessageText] = useState<string>('');
   const [isScanning, setIsScanning] = useState(false);
+  const [copied, setCopied] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [apiError, setApiError] = useState<AnalyzeMessageErrorResponse | null>(
     null
@@ -57,6 +66,7 @@ export const MessageScannerPage: React.FC<MessageScannerPageProps> = ({
 
   const [health, setHealth] = useState<BackendHealthStatus | null>(null);
   const [checkingHealth, setCheckingHealth] = useState<boolean>(true);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   const fetchHealth = useCallback(async () => {
     setCheckingHealth(true);
@@ -79,6 +89,92 @@ export const MessageScannerPage: React.FC<MessageScannerPageProps> = ({
     void fetchHealth();
   }, [fetchHealth]);
 
+  const executeScan = useCallback(
+    async (textToScan: string, targetChannel: MessageChannel) => {
+      const trimmed = textToScan.trim();
+      if (!trimmed) {
+        setValidationError(t(translations.messageScanner.emptyInputError, lang));
+        return;
+      }
+      if (trimmed.length > MAX_MESSAGE_LENGTH) {
+        setValidationError(t(translations.messageScanner.tooLongError, lang));
+        return;
+      }
+
+      setValidationError(null);
+      setApiError(null);
+      setCopied(false);
+      setIsScanning(true);
+
+      const controller = new AbortController();
+      const timeoutId = window.setTimeout(() => controller.abort(), 50_000);
+
+      try {
+        const res = await fetch('/api/analyze-message', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          signal: controller.signal,
+          body: JSON.stringify({
+            message: trimmed,
+            channel: targetChannel,
+            language: lang,
+          }),
+        });
+
+        const payload = (await res.json()) as
+          | AnalyzeMessageSuccessResponse
+          | AnalyzeMessageErrorResponse;
+
+        if (!res.ok || !payload.ok) {
+          const errPayload: AnalyzeMessageErrorResponse =
+            'ok' in payload && payload.ok === false
+              ? payload
+              : {
+                  ok: false,
+                  errorCode: 'AI_ANALYSIS_FAILED',
+                  error: t(translations.fallbackErrors.messageAnalyze, lang),
+                };
+          setAnalysisResponse(null);
+          setApiError(errPayload);
+          if (errPayload.errorCode === 'AI_NOT_CONFIGURED') {
+            setHealth((prev) =>
+              prev ? { ...prev, aiConfigured: false } : prev
+            );
+          }
+          return;
+        }
+
+        setAnalysisResponse(payload);
+      } catch (err) {
+        setAnalysisResponse(null);
+        const isTimeout = err instanceof Error && err.name === 'AbortError';
+        setApiError({
+          ok: false,
+          errorCode: isTimeout ? 'AI_TIMEOUT' : 'NETWORK_ERROR',
+          error: isTimeout
+            ? t(translations.messageScanner.timeoutError, lang)
+            : lang === 'en'
+              ? 'Could not reach the ScamShield backend server (/api/analyze-message). Ensure the backend server is running with "npm run dev".'
+              : 'ScamShield बैकएंड सर्वर (/api/analyze-message) से संपर्क नहीं हो सका। सुनिश्चित करें कि "npm run dev" के साथ बैकएंड सर्वर चल रहा है।',
+        });
+      } finally {
+        window.clearTimeout(timeoutId);
+        setIsScanning(false);
+      }
+    },
+    [lang]
+  );
+
+  useEffect(() => {
+    if (!initialDraft) return;
+    setChannel(initialDraft.channel);
+    setMessageText(initialDraft.text);
+    onConsumeDraft?.();
+    if (initialDraft.autoRun) {
+      void executeScan(initialDraft.text, initialDraft.channel);
+    }
+  }, [initialDraft, onConsumeDraft, executeScan]);
+
   const handleFillSample = (sampleId: string) => {
     const found = sampleMessageFillers.find((s) => s.id === sampleId);
     if (!found) return;
@@ -93,77 +189,41 @@ export const MessageScannerPage: React.FC<MessageScannerPageProps> = ({
     setValidationError(null);
     setApiError(null);
     setAnalysisResponse(null);
+    setCopied(false);
   };
 
-  const handleScan = async () => {
-    const trimmed = messageText.trim();
-    if (!trimmed) {
-      setValidationError(t(translations.messageScanner.emptyInputError, lang));
-      return;
-    }
-    if (trimmed.length > MAX_MESSAGE_LENGTH) {
-      setValidationError(t(translations.messageScanner.tooLongError, lang));
-      return;
-    }
-
-    setValidationError(null);
+  const handleScanAgain = () => {
+    setAnalysisResponse(null);
     setApiError(null);
-    setIsScanning(true);
+    setValidationError(null);
+    setCopied(false);
+    textareaRef.current?.focus();
+  };
 
-    const controller = new AbortController();
-    const timeoutId = window.setTimeout(() => controller.abort(), 50_000);
-
+  const handleCopyReport = async () => {
+    if (!analysisResponse) return;
+    const { result } = analysisResponse;
+    const reportLines = [
+      `ScamShield AI — ${t(translations.messageScanner.resultHeader, lang)}`,
+      `${t(translations.messageRiskLevels[result.riskLevel], lang)} — ${result.riskScore}/100`,
+      `${t(result.scamCategory, lang)}`,
+      ``,
+      t(result.explanation, lang),
+      ``,
+      `${t(translations.messageScanner.redFlagsTitle, lang)}:`,
+      ...(result.redFlags.length > 0
+        ? result.redFlags.map((f) => `- ${t(f.title, lang)}: ${t(f.detail, lang)}`)
+        : [`- ${t(translations.messageScanner.noRedFlags, lang)}`]),
+      ``,
+      `${t(translations.messageScanner.actionTitle, lang)}:`,
+      ...result.safetyRecommendations[lang].map((r) => `- ${r}`),
+    ];
     try {
-      const res = await fetch('/api/analyze-message', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        signal: controller.signal,
-        body: JSON.stringify({
-          message: trimmed,
-          channel,
-          language: lang,
-        }),
-      });
-
-      const payload = (await res.json()) as
-        | AnalyzeMessageSuccessResponse
-        | AnalyzeMessageErrorResponse;
-
-      if (!res.ok || !payload.ok) {
-        const errPayload: AnalyzeMessageErrorResponse =
-          'ok' in payload && payload.ok === false
-            ? payload
-            : {
-                ok: false,
-                errorCode: 'AI_ANALYSIS_FAILED',
-                error: t(translations.fallbackErrors.messageAnalyze, lang),
-              };
-        setAnalysisResponse(null);
-        setApiError(errPayload);
-        if (errPayload.errorCode === 'AI_NOT_CONFIGURED') {
-          setHealth((prev) =>
-            prev ? { ...prev, aiConfigured: false } : prev
-          );
-        }
-        return;
-      }
-
-      setAnalysisResponse(payload);
-    } catch (err) {
-      setAnalysisResponse(null);
-      const isTimeout = err instanceof Error && err.name === 'AbortError';
-      setApiError({
-        ok: false,
-        errorCode: isTimeout ? 'AI_TIMEOUT' : 'NETWORK_ERROR',
-        error: isTimeout
-          ? t(translations.messageScanner.timeoutError, lang)
-          : lang === 'en'
-            ? 'Could not reach the ScamShield backend server (/api/analyze-message). Ensure the backend server is running with "npm run dev".'
-            : 'ScamShield बैकएंड सर्वर (/api/analyze-message) से संपर्क नहीं हो सका। सुनिश्चित करें कि "npm run dev" के साथ बैकएंड सर्वर चल रहा है।',
-      });
-    } finally {
-      window.clearTimeout(timeoutId);
-      setIsScanning(false);
+      await navigator.clipboard.writeText(reportLines.join('\n'));
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Ignore clipboard permission errors cleanly
     }
   };
 
@@ -234,8 +294,8 @@ export const MessageScannerPage: React.FC<MessageScannerPageProps> = ({
   const renderStatusPill = () => {
     if (checkingHealth) {
       return (
-        <div className="inline-flex items-center gap-2 rounded-full border border-slate-700 bg-[#070F22] px-3.5 py-1.5 text-xs text-slate-300">
-          <Loader2 className="h-3.5 w-3.5 animate-spin text-cyan-400" />
+        <div className="inline-flex items-center gap-2 rounded-full border border-slate-700 bg-[#111827] px-3.5 py-1.5 text-xs text-slate-300">
+          <Loader2 className="h-3.5 w-3.5 animate-spin text-[#38BDF8]" />
           <span>{t(translations.messageScanner.statusChecking, lang)}</span>
         </div>
       );
@@ -252,8 +312,8 @@ export const MessageScannerPage: React.FC<MessageScannerPageProps> = ({
 
     if (health?.aiConfigured) {
       return (
-        <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/35 bg-emerald-500/10 px-3.5 py-1.5 text-xs font-medium text-emerald-200">
-          <span className="h-2 w-2 rounded-full bg-emerald-400" />
+        <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/35 bg-emerald-500/10 px-3.5 py-1.5 text-xs font-medium text-emerald-300">
+          <span className="h-2 w-2 rounded-full bg-[#16A34A]" />
           <span>
             {t(translations.messageScanner.statusConnected, lang)}
             {health.model ? ` (${health.model})` : ''}
@@ -277,7 +337,7 @@ export const MessageScannerPage: React.FC<MessageScannerPageProps> = ({
       {/* Page Header */}
       <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
         <div>
-          <span className="inline-flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3 py-1 font-mono text-xs font-medium text-cyan-300">
+          <span className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 font-mono text-xs font-medium text-emerald-300">
             <MessageSquareWarning className="h-3.5 w-3.5" />
             {t(translations.messageScanner.badge, lang)}
           </span>
@@ -296,7 +356,7 @@ export const MessageScannerPage: React.FC<MessageScannerPageProps> = ({
             onClick={() => void fetchHealth()}
             disabled={checkingHealth}
             title={t(translations.messageScanner.retryStatusButton, lang)}
-            className="inline-flex items-center gap-1.5 rounded-full border border-slate-700 bg-[#081022] px-3 py-1.5 text-xs text-slate-300 transition hover:border-cyan-400/40 hover:text-white disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 rounded-full border border-slate-700 bg-[#111827] px-3 py-1.5 text-xs text-slate-300 transition hover:border-emerald-400/40 hover:text-white disabled:opacity-50"
           >
             <RefreshCw
               className={`h-3.5 w-3.5 ${checkingHealth ? 'animate-spin' : ''}`}
@@ -315,7 +375,7 @@ export const MessageScannerPage: React.FC<MessageScannerPageProps> = ({
               <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
                 {t(translations.messageScanner.channelLabel, lang)}
               </span>
-              <div className="flex flex-wrap items-center gap-1 rounded-xl border border-slate-800 bg-[#060D1E] p-1">
+              <div className="flex flex-wrap items-center gap-1 rounded-xl border border-slate-800 bg-[#0B1220] p-1">
                 {channels.map((ch) => (
                   <button
                     key={ch.id}
@@ -323,7 +383,7 @@ export const MessageScannerPage: React.FC<MessageScannerPageProps> = ({
                     onClick={() => setChannel(ch.id)}
                     className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition ${
                       channel === ch.id
-                        ? 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white'
+                        ? 'bg-[#16A34A] text-white shadow-sm'
                         : 'text-slate-400 hover:text-slate-200'
                     }`}
                   >
@@ -334,7 +394,7 @@ export const MessageScannerPage: React.FC<MessageScannerPageProps> = ({
               </div>
             </div>
 
-            {/* Test Message Fillers (Input convenience only—no fake results) */}
+            {/* Test Message Fillers */}
             <div className="mt-5">
               <p className="text-xs font-medium text-slate-400">
                 {t(translations.messageScanner.samplesLabel, lang)}
@@ -345,7 +405,7 @@ export const MessageScannerPage: React.FC<MessageScannerPageProps> = ({
                     key={sample.id}
                     type="button"
                     onClick={() => handleFillSample(sample.id)}
-                    className="rounded-xl border border-slate-700/80 bg-[#070F22] px-3 py-1.5 text-xs font-medium text-slate-300 transition hover:border-cyan-400/50 hover:text-cyan-200"
+                    className="rounded-xl border border-slate-700/80 bg-[#0B1220] px-3 py-1.5 text-xs font-medium text-slate-300 transition hover:border-emerald-400/50 hover:text-emerald-300"
                   >
                     {t(sample.label, lang)}
                   </button>
@@ -374,8 +434,9 @@ export const MessageScannerPage: React.FC<MessageScannerPageProps> = ({
                 </span>
               </div>
               <textarea
+                ref={textareaRef}
                 id="message-scanner-input"
-                rows={6}
+                rows={7}
                 value={messageText}
                 onChange={(e) => {
                   setMessageText(e.target.value);
@@ -386,7 +447,7 @@ export const MessageScannerPage: React.FC<MessageScannerPageProps> = ({
                   translations.messageScanner.textareaPlaceholder,
                   lang
                 )}
-                className="mt-2 min-h-[156px] w-full rounded-2xl border border-slate-700/80 bg-[#050B18] p-4 font-sans text-sm leading-relaxed text-slate-100 placeholder-slate-500 transition focus:border-cyan-400/60 focus:outline-none focus:ring-2 focus:ring-cyan-500/20"
+                className="mt-2 min-h-[172px] w-full rounded-2xl border border-slate-700/80 bg-[#0B1220] p-4 font-sans text-sm leading-relaxed text-slate-100 placeholder-slate-500 transition focus:border-emerald-500/60 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
               />
             </div>
 
@@ -407,7 +468,7 @@ export const MessageScannerPage: React.FC<MessageScannerPageProps> = ({
               type="button"
               onClick={handleClear}
               disabled={isScanning}
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-[#081022] px-4 py-2.5 text-sm font-medium text-slate-300 transition hover:border-slate-500 hover:text-white disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-[#0B1220] px-4 py-2.5 text-sm font-medium text-slate-300 transition hover:border-slate-500 hover:text-white disabled:opacity-50"
             >
               <Eraser className="h-4 w-4" />
               {t(translations.messageScanner.clearButton, lang)}
@@ -415,9 +476,9 @@ export const MessageScannerPage: React.FC<MessageScannerPageProps> = ({
 
             <button
               type="button"
-              onClick={() => void handleScan()}
+              onClick={() => void executeScan(messageText, channel)}
               disabled={isScanning}
-              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-cyan-500/20 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-65"
+              className="inline-flex items-center gap-2 rounded-xl bg-[#16A34A] px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-600/25 transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-65"
             >
               {isScanning ? (
                 <>
@@ -434,26 +495,55 @@ export const MessageScannerPage: React.FC<MessageScannerPageProps> = ({
           </div>
         </div>
 
-        {/* Result Column */}
+        {/* Result Dashboard Column */}
         <div className="glass-panel rounded-2xl p-6 lg:col-span-7">
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-4">
             <h2 className="font-display text-lg font-bold text-white">
               {t(translations.messageScanner.resultHeader, lang)}
             </h2>
-            {analysisResponse && (
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/35 bg-emerald-500/15 px-3 py-1 font-mono text-[11px] font-semibold text-emerald-200">
-                <Sparkles className="h-3.5 w-3.5" />
-                {t(translations.messageScanner.liveAiBadge, lang)} •{' '}
-                {analysisResponse.model}
-              </span>
-            )}
+            <div className="flex flex-wrap items-center gap-2">
+              {analysisResponse && (
+                <>
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/35 bg-emerald-500/15 px-3 py-1 font-mono text-[11px] font-semibold text-emerald-300">
+                    <Sparkles className="h-3.5 w-3.5" />
+                    {t(translations.messageScanner.liveAiBadge, lang)} •{' '}
+                    {analysisResponse.model}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => void handleCopyReport()}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-slate-700 bg-[#0B1220] px-2.5 py-1 text-xs font-medium text-slate-200 transition hover:border-sky-400/50 hover:text-[#38BDF8]"
+                  >
+                    {copied ? (
+                      <>
+                        <Check className="h-3.5 w-3.5 text-emerald-400" />
+                        {t(translations.messageScanner.copiedReport, lang)}
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="h-3.5 w-3.5" />
+                        {t(translations.messageScanner.copyReport, lang)}
+                      </>
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleScanAgain}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-500/35 bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold text-emerald-300 transition hover:bg-emerald-500/20"
+                  >
+                    <RotateCcw className="h-3.5 w-3.5" />
+                    {t(translations.messageScanner.scanAgain, lang)}
+                  </button>
+                </>
+              )}
+            </div>
           </div>
 
           {/* Loading State */}
           {isScanning && (
-            <div className="mt-10 flex flex-col items-center justify-center rounded-2xl border border-cyan-500/25 bg-[#050B18]/80 px-6 py-16 text-center">
-              <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl border border-cyan-400/35 bg-cyan-500/15">
-                <Loader2 className="h-7 w-7 animate-spin text-cyan-300" />
+            <div className="mt-10 flex flex-col items-center justify-center rounded-2xl border border-emerald-500/25 bg-[#0B1220]/90 px-6 py-16 text-center">
+              <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl border border-emerald-400/35 bg-emerald-500/15">
+                <Loader2 className="h-7 w-7 animate-spin text-emerald-400" />
               </div>
               <p className="mt-4 font-display text-lg font-bold text-white">
                 {t(translations.messageScanner.scanningButton, lang)}
@@ -487,20 +577,20 @@ export const MessageScannerPage: React.FC<MessageScannerPageProps> = ({
               </div>
 
               {apiError.errorCode === 'AI_NOT_CONFIGURED' && (
-                <div className="rounded-xl border border-amber-400/30 bg-[#060D1E] p-4 text-xs leading-relaxed text-slate-200">
+                <div className="rounded-xl border border-amber-400/30 bg-[#0B1220] p-4 text-xs leading-relaxed text-slate-200">
                   <p className="font-semibold text-amber-200">
                     {t(translations.messageScanner.setupGuideTitle, lang)}
                   </p>
                   <p className="mt-1.5 text-slate-300">
                     {t(translations.messageScanner.setupGuideBody, lang)}
                   </p>
-                  <pre className="mt-3 overflow-x-auto rounded-lg border border-slate-800 bg-[#040914] p-3 font-mono text-[11px] text-cyan-300">
-                    {`GEMINI_API_KEY=your_real_api_key_here\nGEMINI_MODEL=gemini-3.8-flash\nPORT=3001`}
+                  <pre className="mt-3 overflow-x-auto rounded-lg border border-slate-800 bg-[#111827] p-3 font-mono text-[11px] text-[#38BDF8]">
+                    {`GEMINI_API_KEY=your_real_api_key_here\nGEMINI_MODEL=gemini-3.5-flash-lite\nPORT=3001`}
                   </pre>
                   <button
                     type="button"
                     onClick={() => void fetchHealth()}
-                    className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-cyan-400/35 bg-cyan-500/15 px-3 py-1.5 font-semibold text-cyan-200 transition hover:bg-cyan-500/25"
+                    className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/35 bg-emerald-500/15 px-3 py-1.5 font-semibold text-emerald-300 transition hover:bg-emerald-500/25"
                   >
                     <RefreshCw className="h-3.5 w-3.5" />
                     {t(translations.messageScanner.retryStatusButton, lang)}
@@ -528,8 +618,8 @@ export const MessageScannerPage: React.FC<MessageScannerPageProps> = ({
                 </div>
               )}
 
-              <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-700/80 bg-[#050B18]/70 px-6 py-14 text-center">
-                <ScanSearch className="h-10 w-10 text-cyan-400/70" />
+              <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-700/80 bg-[#0B1220]/70 px-6 py-14 text-center">
+                <ScanSearch className="h-10 w-10 text-emerald-400/75" />
                 <h3 className="mt-4 font-display text-lg font-bold text-white">
                   {t(translations.messageScanner.idleTitle, lang)}
                 </h3>
@@ -540,10 +630,29 @@ export const MessageScannerPage: React.FC<MessageScannerPageProps> = ({
             </div>
           )}
 
-          {/* Real AI Result Layout */}
+          {/* Real AI Result Dashboard */}
           {!isScanning && !apiError && result && analysisResponse && (
             <div className="mt-5 space-y-5">
-              {/* Top Score & Bilingual Explanation */}
+              {/* Top Banner: Risk Level — XX/100 */}
+              <div
+                className={`flex flex-wrap items-center justify-between gap-2 rounded-xl border px-4 py-2.5 ${
+                  result.riskLevel === 'High'
+                    ? 'border-rose-500/35 bg-rose-500/10 text-rose-200'
+                    : result.riskLevel === 'Medium'
+                      ? 'border-amber-500/35 bg-amber-500/10 text-amber-200'
+                      : 'border-emerald-500/35 bg-emerald-500/10 text-emerald-200'
+                }`}
+              >
+                <span className="font-mono text-xs font-bold tracking-wider">
+                  {t(translations.messageRiskLevels[result.riskLevel], lang)} —{' '}
+                  {result.riskScore}/100
+                </span>
+                <span className="font-mono text-[11px] opacity-85">
+                  {t(translations.channelNames[analysisResponse.channel], lang)}
+                </span>
+              </div>
+
+              {/* Top Score Gauge & AI Summary */}
               <div className="grid gap-4 sm:grid-cols-12">
                 <div className="sm:col-span-4">
                   <RiskGauge
@@ -553,9 +662,9 @@ export const MessageScannerPage: React.FC<MessageScannerPageProps> = ({
                     label={t(translations.messageScanner.riskScoreLabel, lang)}
                   />
                 </div>
-                <div className="flex flex-col justify-between rounded-2xl border border-slate-800/90 bg-[#060E20]/80 p-4 sm:col-span-8">
+                <div className="flex flex-col justify-between rounded-2xl border border-slate-800/90 bg-[#111827] p-4 sm:col-span-8">
                   <div>
-                    <span className="font-mono text-[11px] uppercase tracking-wider text-cyan-400">
+                    <span className="font-mono text-[11px] uppercase tracking-wider text-[#38BDF8]">
                       {t(translations.channelNames[analysisResponse.channel], lang)} •{' '}
                       {t(translations.messageRiskLevels[result.riskLevel], lang)}
                     </span>
@@ -611,7 +720,7 @@ export const MessageScannerPage: React.FC<MessageScannerPageProps> = ({
                         className={`flex items-center justify-between gap-2 rounded-xl border px-3 py-2.5 text-xs ${
                           detected
                             ? 'border-rose-500/35 bg-rose-500/10 text-rose-100'
-                            : 'border-slate-800 bg-[#060D1E] text-slate-400'
+                            : 'border-slate-800 bg-[#0B1220] text-slate-400'
                         }`}
                       >
                         <span className="flex items-center gap-2 font-medium">
@@ -653,9 +762,9 @@ export const MessageScannerPage: React.FC<MessageScannerPageProps> = ({
                   {result.reasons[lang].map((reason, idx) => (
                     <li
                       key={idx}
-                      className="flex items-start gap-2.5 rounded-xl border border-slate-800 bg-[#060D1E] px-3.5 py-2.5 text-sm text-slate-200"
+                      className="flex items-start gap-2.5 rounded-xl border border-slate-800 bg-[#0B1220] px-3.5 py-2.5 text-sm text-slate-200"
                     >
-                      <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-cyan-400" />
+                      <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-[#38BDF8]" />
                       <span>{reason}</span>
                     </li>
                   ))}
@@ -677,7 +786,7 @@ export const MessageScannerPage: React.FC<MessageScannerPageProps> = ({
                     {result.redFlags.map((flag, idx) => (
                       <div
                         key={idx}
-                        className="flex items-start gap-3 rounded-xl border border-slate-800 bg-[#060D1E] p-3.5"
+                        className="flex items-start gap-3 rounded-xl border border-slate-800 bg-[#0B1220] p-3.5"
                       >
                         <div className="mt-0.5">
                           {flag.severity === 'high' ? (
@@ -685,7 +794,7 @@ export const MessageScannerPage: React.FC<MessageScannerPageProps> = ({
                           ) : flag.severity === 'medium' ? (
                             <AlertCircle className="h-4 w-4 text-amber-400" />
                           ) : (
-                            <CheckCircle2 className="h-4 w-4 text-cyan-400" />
+                            <CheckCircle2 className="h-4 w-4 text-[#38BDF8]" />
                           )}
                         </div>
                         <div className="flex-1">
@@ -699,7 +808,7 @@ export const MessageScannerPage: React.FC<MessageScannerPageProps> = ({
                                   ? 'bg-rose-500/20 text-rose-300'
                                   : flag.severity === 'medium'
                                     ? 'bg-amber-500/20 text-amber-300'
-                                    : 'bg-cyan-500/20 text-cyan-300'
+                                    : 'bg-sky-500/20 text-[#38BDF8]'
                               }`}
                             >
                               {t(translations.severityLabels[flag.severity], lang)}
@@ -716,9 +825,9 @@ export const MessageScannerPage: React.FC<MessageScannerPageProps> = ({
               </div>
 
               {/* Practical Safety Recommendations */}
-              <div className="rounded-2xl border border-cyan-500/25 bg-cyan-500/10 p-4">
-                <div className="flex items-center gap-2 text-cyan-200">
-                  <ShieldCheck className="h-5 w-5 shrink-0 text-cyan-300" />
+              <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4">
+                <div className="flex items-center gap-2 text-emerald-300">
+                  <ShieldCheck className="h-5 w-5 shrink-0 text-emerald-400" />
                   <h4 className="text-xs font-semibold uppercase tracking-wider">
                     {t(translations.messageScanner.actionTitle, lang)}
                   </h4>
@@ -729,7 +838,7 @@ export const MessageScannerPage: React.FC<MessageScannerPageProps> = ({
                       key={idx}
                       className="flex items-start gap-2.5 text-sm leading-relaxed text-slate-100"
                     >
-                      <CheckCircle2 className="mt-1 h-4 w-4 shrink-0 text-cyan-300" />
+                      <CheckCircle2 className="mt-1 h-4 w-4 shrink-0 text-emerald-400" />
                       <span>{rec}</span>
                     </li>
                   ))}

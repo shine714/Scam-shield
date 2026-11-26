@@ -1,7 +1,7 @@
 import React from 'react';
 import {
   CheckCircle2,
-  Clock,
+  Cpu,
   Layers,
   Lock,
   ShieldCheck,
@@ -20,7 +20,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({ lang, onNavigate }) => {
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
       {/* Header */}
       <div className="max-w-3xl">
-        <span className="inline-flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3.5 py-1 font-mono text-xs font-medium text-cyan-300">
+        <span className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-1 font-mono text-xs font-medium text-emerald-300">
           <Layers className="h-3.5 w-3.5" />
           {t(translations.about.badge, lang)}
         </span>
@@ -35,8 +35,8 @@ export const AboutPage: React.FC<AboutPageProps> = ({ lang, onNavigate }) => {
       {/* Mission + Privacy */}
       <div className="mt-10 grid gap-6 lg:grid-cols-2">
         <div className="glass-panel rounded-2xl p-6 sm:p-8">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-cyan-400/30 bg-cyan-500/10">
-            <ShieldCheck className="h-6 w-6 text-cyan-300" />
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-emerald-500/30 bg-emerald-500/10">
+            <ShieldCheck className="h-6 w-6 text-emerald-400" />
           </div>
           <h2 className="mt-4 font-display text-2xl font-bold text-white">
             {t(translations.about.missionTitle, lang)}
@@ -47,8 +47,8 @@ export const AboutPage: React.FC<AboutPageProps> = ({ lang, onNavigate }) => {
         </div>
 
         <div className="glass-panel rounded-2xl p-6 sm:p-8">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-blue-400/30 bg-blue-500/10">
-            <Lock className="h-6 w-6 text-blue-300" />
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-sky-400/30 bg-sky-500/10">
+            <Lock className="h-6 w-6 text-[#38BDF8]" />
           </div>
           <h2 className="mt-4 font-display text-2xl font-bold text-white">
             {t(translations.about.privacyTitle, lang)}
@@ -59,14 +59,13 @@ export const AboutPage: React.FC<AboutPageProps> = ({ lang, onNavigate }) => {
         </div>
       </div>
 
-      {/* Phase 1 vs Phase 2 Roadmap */}
+      {/* Platform Capabilities & Protection Layers */}
       <div className="mt-10">
         <h2 className="font-display text-2xl font-bold text-white sm:text-3xl">
           {t(translations.about.roadmapTitle, lang)}
         </h2>
 
         <div className="mt-6 grid gap-6 lg:grid-cols-2">
-          {/* Phase 1 */}
           <div className="glass-panel rounded-2xl border-emerald-500/25 p-6 sm:p-8">
             <div className="flex items-center gap-2.5">
               <CheckCircle2 className="h-5 w-5 text-emerald-400" />
@@ -78,7 +77,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({ lang, onNavigate }) => {
               {translations.about.phase1Items.map((item, idx) => (
                 <li
                   key={idx}
-                  className="flex items-start gap-3 rounded-xl border border-slate-800 bg-[#060D1E] px-4 py-3 text-sm text-slate-200"
+                  className="flex items-start gap-3 rounded-xl border border-slate-800 bg-[#0B1220] px-4 py-3 text-sm text-slate-200"
                 >
                   <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" />
                   <span>{t(item, lang)}</span>
@@ -87,10 +86,9 @@ export const AboutPage: React.FC<AboutPageProps> = ({ lang, onNavigate }) => {
             </ul>
           </div>
 
-          {/* Phase 2 */}
-          <div className="glass-panel rounded-2xl border-cyan-500/20 p-6 sm:p-8">
+          <div className="glass-panel rounded-2xl border-sky-400/25 p-6 sm:p-8">
             <div className="flex items-center gap-2.5">
-              <Clock className="h-5 w-5 text-cyan-400" />
+              <Cpu className="h-5 w-5 text-[#38BDF8]" />
               <h3 className="font-display text-xl font-bold text-white">
                 {t(translations.about.phase2Title, lang)}
               </h3>
@@ -99,9 +97,9 @@ export const AboutPage: React.FC<AboutPageProps> = ({ lang, onNavigate }) => {
               {translations.about.phase2Items.map((item, idx) => (
                 <li
                   key={idx}
-                  className="flex items-start gap-3 rounded-xl border border-slate-800 bg-[#060D1E] px-4 py-3 text-sm text-slate-300"
+                  className="flex items-start gap-3 rounded-xl border border-slate-800 bg-[#0B1220] px-4 py-3 text-sm text-slate-300"
                 >
-                  <Clock className="mt-0.5 h-4 w-4 shrink-0 text-cyan-400" />
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#38BDF8]" />
                   <span>{t(item, lang)}</span>
                 </li>
               ))}
@@ -111,7 +109,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({ lang, onNavigate }) => {
       </div>
 
       {/* Quick Action Bar */}
-      <div className="mt-10 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-cyan-500/25 bg-gradient-to-r from-blue-950/70 to-cyan-950/40 p-6">
+      <div className="mt-10 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-emerald-500/25 bg-gradient-to-r from-[#111827] via-emerald-950/35 to-[#111827] p-6">
         <div>
           <h3 className="font-display text-lg font-bold text-white">
             {t(translations.about.ctaTitle, lang)}
@@ -124,7 +122,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({ lang, onNavigate }) => {
           <button
             type="button"
             onClick={() => onNavigate('message-scanner')}
-            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:brightness-110"
+            className="inline-flex items-center gap-2 rounded-xl bg-[#16A34A] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-500"
           >
             {t(translations.nav.messageScanner, lang)}
             <ArrowRight className="h-4 w-4" />
@@ -132,7 +130,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({ lang, onNavigate }) => {
           <button
             type="button"
             onClick={() => onNavigate('url-scanner')}
-            className="inline-flex items-center gap-2 rounded-xl border border-cyan-400/35 bg-[#0A1530] px-4 py-2.5 text-sm font-semibold text-cyan-200 transition hover:bg-cyan-500/15"
+            className="inline-flex items-center gap-2 rounded-xl border border-sky-400/35 bg-[#111827] px-4 py-2.5 text-sm font-semibold text-sky-200 transition hover:bg-sky-500/15"
           >
             {t(translations.nav.urlScanner, lang)}
           </button>
@@ -141,4 +139,3 @@ export const AboutPage: React.FC<AboutPageProps> = ({ lang, onNavigate }) => {
     </div>
   );
 };
-

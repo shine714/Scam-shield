@@ -1,75 +1,80 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
+  AlertCircle,
   ArrowRight,
-  BookOpenCheck,
-  CheckCircle2,
   Cpu,
+  Globe,
   Languages,
   Link2,
   Lock,
   MessageSquareWarning,
   Radar,
-  ShieldAlert,
+  ScanSearch,
   ShieldCheck,
   ShieldOff,
   Sparkles,
 } from 'lucide-react';
-import type { Language, PageRoute } from '../types';
+import type { Language, MessageChannel, PageRoute } from '../types';
 import { t, translations } from '../i18n/translations';
 import { ScamAwarenessSection } from '../components/ScamAwarenessSection';
 
 interface LandingPageProps {
   lang: Language;
   onNavigate: (page: PageRoute) => void;
+  onQuickAnalyzeMessage?: (text: string, channel: MessageChannel) => void;
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({
   lang,
   onNavigate,
+  onQuickAnalyzeMessage,
 }) => {
-  const featureIcons = [
-    <MessageSquareWarning key="msg" className="h-6 w-6 text-cyan-300" />,
-    <Link2 key="url" className="h-6 w-6 text-blue-300" />,
-    <BookOpenCheck key="aware" className="h-6 w-6 text-cyan-300" />,
-  ];
+  const [quickMessage, setQuickMessage] = useState('');
+  const [quickError, setQuickError] = useState<string | null>(null);
+
+  const handleQuickSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = quickMessage.trim();
+    if (!trimmed) {
+      setQuickError(t(translations.hero.quickBoxEmptyError, lang));
+      return;
+    }
+    setQuickError(null);
+    if (onQuickAnalyzeMessage) {
+      onQuickAnalyzeMessage(trimmed, 'sms');
+    } else {
+      onNavigate('message-scanner');
+    }
+  };
 
   const stepIcons = [
-    <MessageSquareWarning key="s1" className="h-5 w-5 text-cyan-300" />,
-    <Cpu key="s2" className="h-5 w-5 text-blue-300" />,
+    <ScanSearch key="s1" className="h-5 w-5 text-emerald-400" />,
+    <Cpu key="s2" className="h-5 w-5 text-[#38BDF8]" />,
     <ShieldCheck key="s3" className="h-5 w-5 text-emerald-300" />,
   ];
 
-  const trustBadges = [
-    {
-      icon: <ShieldOff className="h-3.5 w-3.5 text-cyan-300" />,
-      text: lang === 'en' ? 'Zero-Visit URL Inspection' : 'बिना लिंक खोले URL जाँच',
-    },
-    {
-      icon: <Lock className="h-3.5 w-3.5 text-blue-300" />,
-      text: lang === 'en' ? 'Server-Side AI Keys' : 'सुरक्षित बैकएंड API',
-    },
-    {
-      icon: <Languages className="h-3.5 w-3.5 text-emerald-300" />,
-      text: lang === 'en' ? 'Bilingual EN & हिन्दी' : 'अंग्रेज़ी और हिंदी सहायता',
-    },
+  const trustIcons = [
+    <Lock key="t1" className="h-5 w-5 text-emerald-400" />,
+    <Sparkles key="t2" className="h-5 w-5 text-[#38BDF8]" />,
+    <ShieldOff key="t3" className="h-5 w-5 text-emerald-300" />,
   ];
 
   return (
     <div>
-      {/* Hero Section */}
-      <section className="relative overflow-hidden pt-10 pb-14 sm:pt-14 lg:pt-18">
+      {/* 01 — HERO SECTION */}
+      <section className="relative overflow-hidden pt-10 pb-12 sm:pt-14 lg:pt-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid items-center gap-10 lg:grid-cols-12 lg:gap-12">
             {/* Hero Copy */}
             <div className="lg:col-span-7">
-              <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3.5 py-1.5 text-xs font-medium text-cyan-200 shadow-sm shadow-cyan-500/10">
-                <Sparkles className="h-3.5 w-3.5 text-cyan-300" />
+              <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-1.5 text-xs font-medium text-emerald-300">
+                <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
                 <span>{t(translations.hero.pill, lang)}</span>
               </div>
 
               <h1 className="mt-5 font-display text-4xl font-extrabold leading-[1.1] tracking-tight text-white sm:text-5xl lg:text-[3.5rem]">
                 {t(translations.hero.titleLead, lang)}{' '}
-                <span className="bg-gradient-to-r from-cyan-300 via-sky-400 to-blue-500 bg-clip-text text-transparent">
+                <span className="block bg-gradient-to-r from-emerald-400 via-emerald-300 to-[#38BDF8] bg-clip-text text-transparent">
                   {t(translations.hero.titleHighlight, lang)}
                 </span>
               </h1>
@@ -83,7 +88,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <button
                   type="button"
                   onClick={() => onNavigate('message-scanner')}
-                  className="group inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 px-5 py-3.5 text-sm font-semibold text-white shadow-lg shadow-cyan-500/25 transition hover:scale-[1.01] hover:brightness-110"
+                  className="group inline-flex items-center gap-2 rounded-xl bg-[#16A34A] px-5 py-3.5 text-sm font-semibold text-white shadow-lg shadow-emerald-600/25 transition hover:bg-emerald-500"
                 >
                   <MessageSquareWarning className="h-4 w-4" />
                   {t(translations.hero.ctaPrimary, lang)}
@@ -93,210 +98,263 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <button
                   type="button"
                   onClick={() => onNavigate('url-scanner')}
-                  className="inline-flex items-center gap-2 rounded-xl border border-cyan-400/35 bg-[#0A1530] px-5 py-3.5 text-sm font-semibold text-cyan-100 transition hover:border-cyan-300/60 hover:bg-cyan-500/15"
+                  className="inline-flex items-center gap-2 rounded-xl border border-sky-400/35 bg-[#111827] px-5 py-3.5 text-sm font-semibold text-sky-200 transition hover:border-sky-300/60 hover:bg-sky-500/10"
                 >
-                  <Link2 className="h-4 w-4 text-cyan-300" />
+                  <Link2 className="h-4 w-4 text-[#38BDF8]" />
                   {t(translations.hero.ctaSecondary, lang)}
                 </button>
 
                 <button
                   type="button"
                   onClick={() => onNavigate('awareness')}
-                  className="inline-flex items-center gap-1.5 rounded-xl px-4 py-3 text-sm font-medium text-slate-300 transition hover:text-cyan-300"
+                  className="inline-flex items-center gap-1.5 rounded-xl px-4 py-3 text-sm font-medium text-slate-300 transition hover:text-emerald-300"
                 >
                   {t(translations.hero.ctaAwareness, lang)} →
                 </button>
               </div>
 
-              {/* Security Trust Strip */}
+              {/* Compact Security Capabilities Strip */}
               <div className="mt-7 flex flex-wrap items-center gap-2.5 border-t border-slate-800/80 pt-5">
-                {trustBadges.map((badge, idx) => (
-                  <span
-                    key={idx}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-800 bg-[#070F22]/80 px-3 py-1.5 text-xs font-medium text-slate-300"
-                  >
-                    {badge.icon}
-                    {badge.text}
-                  </span>
-                ))}
+                <span className="inline-flex items-center gap-1.5 rounded-lg border border-slate-800 bg-[#111827]/90 px-3 py-1.5 text-xs font-medium text-slate-300">
+                  <ShieldOff className="h-3.5 w-3.5 text-emerald-400" />
+                  {lang === 'en' ? 'Zero-Visit URL Check' : 'बिना लिंक खोले URL जाँच'}
+                </span>
+                <span className="inline-flex items-center gap-1.5 rounded-lg border border-slate-800 bg-[#111827]/90 px-3 py-1.5 text-xs font-medium text-slate-300">
+                  <Lock className="h-3.5 w-3.5 text-[#38BDF8]" />
+                  {lang === 'en' ? 'Server-Side AI Defense' : 'सुरक्षित बैकएंड AI'}
+                </span>
+                <span className="inline-flex items-center gap-1.5 rounded-lg border border-slate-800 bg-[#111827]/90 px-3 py-1.5 text-xs font-medium text-slate-300">
+                  <Languages className="h-3.5 w-3.5 text-emerald-300" />
+                  {lang === 'en' ? 'Bilingual EN & हिन्दी' : 'अंग्रेज़ी और हिंदी सहायता'}
+                </span>
               </div>
             </div>
 
-            {/* Right Interactive Telemetry Preview Card */}
+            {/* Right Glowing AI Shield + Network Animation Visual */}
             <div className="lg:col-span-5">
-              <div className="glass-panel animate-float-slow relative overflow-hidden rounded-3xl p-6">
-                {/* Subtle animated scanner sweep */}
-                <div className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-cyan-400/10 to-transparent animate-scan-sweep" />
+              <div className="glass-panel animate-float-slow relative overflow-hidden rounded-3xl border border-emerald-500/25 p-6">
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-emerald-500/12 to-transparent animate-scan-sweep" />
 
-                {/* SaaS Console Window Chrome */}
-                <div className="flex items-center justify-between gap-2 border-b border-slate-800 pb-3.5">
+                {/* Top Header Chrome */}
+                <div className="flex items-center justify-between border-b border-slate-800 pb-3.5">
                   <div className="flex items-center gap-2.5">
-                    <div className="flex items-center gap-1.5">
-                      <span className="h-2.5 w-2.5 rounded-full bg-rose-400/80" />
-                      <span className="h-2.5 w-2.5 rounded-full bg-amber-400/80" />
-                      <span className="h-2.5 w-2.5 rounded-full bg-emerald-400/80" />
-                    </div>
-                    <div className="h-4 w-px bg-slate-800" />
-                    <div className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-cyan-500/15 text-cyan-300">
+                    <div className="relative flex h-8 w-8 items-center justify-center rounded-lg border border-emerald-500/35 bg-emerald-500/15 text-emerald-400">
                       <Radar className="h-4 w-4" />
-                      <span className="absolute inset-0 rounded-lg border border-cyan-400/40 animate-pulse-ring" />
+                      <span className="absolute inset-0 rounded-lg border border-emerald-400/40 animate-pulse-ring" />
                     </div>
                     <div>
                       <p className="text-xs font-semibold text-white">
-                        {t(translations.hero.previewCardTitle, lang)}
+                        {t(translations.hero.shieldTitle, lang)}
                       </p>
                       <p className="font-mono text-[10px] text-slate-400">
-                        {t(translations.brand.phaseBadge, lang)}
+                        {t(translations.hero.shieldSubtitle, lang)}
                       </p>
                     </div>
                   </div>
-                  <span className="rounded-full border border-amber-400/35 bg-amber-500/15 px-2.5 py-0.5 font-mono text-[10px] font-semibold text-amber-300">
-                    {t(translations.hero.previewDemoTag, lang)}
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/35 bg-emerald-500/10 px-2.5 py-0.5 font-mono text-[10px] font-semibold text-emerald-300">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                    ACTIVE
                   </span>
                 </div>
 
-                {/* Sample SMS Snippet */}
-                <div className="mt-4 rounded-2xl border border-slate-800/90 bg-[#040914] p-4">
-                  <p className="font-mono text-xs leading-relaxed text-slate-300">
-                    {t(translations.hero.previewMessageSnippet, lang)}
+                {/* Central Glowing Shield & Network Orbit Illustration */}
+                <div className="relative my-5 flex h-56 items-center justify-center overflow-hidden rounded-2xl border border-slate-800/90 bg-[#0B1220]/90">
+                  {/* Ambient radial aura */}
+                  <div className="pointer-events-none absolute h-40 w-40 rounded-full bg-emerald-500/15 blur-2xl" />
+                  <div className="pointer-events-none absolute h-28 w-28 rounded-full bg-sky-400/15 blur-xl" />
+
+                  {/* Rotating cyber network ring SVG */}
+                  <svg
+                    className="animate-spin-slow absolute h-48 w-48 text-emerald-500/30"
+                    viewBox="0 0 200 200"
+                    aria-hidden="true"
+                  >
+                    <circle
+                      cx="100"
+                      cy="100"
+                      r="84"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1"
+                      strokeDasharray="4 6"
+                    />
+                    <circle
+                      cx="100"
+                      cy="100"
+                      r="62"
+                      fill="none"
+                      stroke="#38BDF8"
+                      strokeOpacity="0.25"
+                      strokeWidth="1"
+                    />
+                    <circle cx="100" cy="16" r="4" fill="#22C55E" />
+                    <circle cx="184" cy="100" r="4" fill="#38BDF8" />
+                    <circle cx="100" cy="184" r="4" fill="#22C55E" />
+                    <circle cx="16" cy="100" r="4" fill="#38BDF8" />
+                  </svg>
+
+                  {/* Center Glowing Shield Core */}
+                  <div className="relative z-10 flex flex-col items-center">
+                    <div className="relative flex h-20 w-20 items-center justify-center rounded-2xl border border-emerald-400/50 bg-gradient-to-br from-emerald-600/30 via-[#111827] to-sky-500/20 shadow-[0_0_35px_rgba(22,163,74,0.35)]">
+                      <ShieldCheck className="h-10 w-10 text-emerald-400" />
+                      <span className="absolute inset-0 rounded-2xl border border-emerald-400/40 animate-pulse-ring" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Network Signal Nodes */}
+                <div className="grid grid-cols-3 gap-2.5 text-center">
+                  <div className="rounded-xl border border-slate-800 bg-[#0B1220]/90 px-2.5 py-2.5">
+                    <MessageSquareWarning className="mx-auto h-4 w-4 text-emerald-400" />
+                    <p className="mt-1 text-[11px] font-semibold text-white">
+                      {lang === 'en' ? 'SMS & Chat' : 'SMS और चैट'}
+                    </p>
+                    <p className="font-mono text-[10px] text-slate-400">AI NLP</p>
+                  </div>
+                  <div className="rounded-xl border border-slate-800 bg-[#0B1220]/90 px-2.5 py-2.5">
+                    <Globe className="mx-auto h-4 w-4 text-[#38BDF8]" />
+                    <p className="mt-1 text-[11px] font-semibold text-white">
+                      {lang === 'en' ? 'URL Defense' : 'URL सुरक्षा'}
+                    </p>
+                    <p className="font-mono text-[10px] text-slate-400">Zero-Visit</p>
+                  </div>
+                  <div className="rounded-xl border border-slate-800 bg-[#0B1220]/90 px-2.5 py-2.5">
+                    <Languages className="mx-auto h-4 w-4 text-emerald-300" />
+                    <p className="mt-1 text-[11px] font-semibold text-white">
+                      {lang === 'en' ? 'Bilingual' : 'द्विभाषी'}
+                    </p>
+                    <p className="font-mono text-[10px] text-slate-400">EN / HI</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Full-Width Hero Message Scanning Box (Routes cleanly to real backend AI scanner) */}
+          <form
+            onSubmit={handleQuickSubmit}
+            className="glass-panel mt-10 rounded-3xl border border-emerald-500/25 p-5 sm:p-6"
+          >
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <label
+                htmlFor="hero-quick-message-input"
+                className="inline-flex items-center gap-2 font-mono text-xs font-semibold uppercase tracking-wider text-emerald-400"
+              >
+                <span className="h-2 w-2 rounded-full bg-[#16A34A]" />
+                {t(translations.hero.quickBoxLabel, lang)}
+              </label>
+              <span className="text-xs text-slate-400">
+                {lang === 'en'
+                  ? 'Live Gemini AI Evaluation'
+                  : 'लाइव AI सुरक्षा जाँच'}
+              </span>
+            </div>
+
+            <textarea
+              id="hero-quick-message-input"
+              rows={3}
+              value={quickMessage}
+              onChange={(e) => {
+                setQuickMessage(e.target.value);
+                setQuickError(null);
+              }}
+              placeholder={t(translations.hero.quickBoxPlaceholder, lang)}
+              className="mt-3 w-full rounded-2xl border border-slate-700/80 bg-[#0B1220] p-4 text-sm text-slate-100 placeholder-slate-500 transition focus:border-emerald-500/60 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+            />
+
+            {quickError && (
+              <div
+                role="alert"
+                className="mt-2.5 flex items-center gap-2 text-xs text-rose-300"
+              >
+                <AlertCircle className="h-4 w-4 shrink-0 text-rose-400" />
+                <span>{quickError}</span>
+              </div>
+            )}
+
+            <button
+              type="submit"
+              className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#16A34A] px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-emerald-600/25 transition hover:bg-emerald-500"
+            >
+              <ScanSearch className="h-4 w-4" />
+              {t(translations.hero.quickBoxButton, lang)}
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          </form>
+        </div>
+      </section>
+
+      {/* 02 — QUICK SCAN CARDS */}
+      <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
+          <div>
+            <span className="inline-flex items-center rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 font-mono text-xs font-medium text-emerald-300">
+              {t(translations.quickScan.badge, lang)}
+            </span>
+            <h2 className="mt-3 font-display text-2xl font-bold text-white sm:text-3xl">
+              {t(translations.quickScan.title, lang)}
+            </h2>
+          </div>
+        </div>
+
+        <div className="mt-6 grid gap-6 md:grid-cols-2">
+          {translations.quickScan.cards.map((card, idx) => {
+            const isMsg = idx === 0;
+            return (
+              <div
+                key={card.route}
+                className="glass-panel glass-panel-hover group relative flex flex-col justify-between overflow-hidden rounded-2xl p-6"
+              >
+                <div
+                  className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent ${
+                    isMsg ? 'via-emerald-400/50' : 'via-sky-400/50'
+                  } to-transparent`}
+                />
+                <div>
+                  <div
+                    className={`flex h-12 w-12 items-center justify-center rounded-2xl border ${
+                      isMsg
+                        ? 'border-emerald-500/30 bg-emerald-500/15 text-emerald-400'
+                        : 'border-sky-400/30 bg-sky-500/15 text-[#38BDF8]'
+                    }`}
+                  >
+                    {isMsg ? (
+                      <MessageSquareWarning className="h-6 w-6" />
+                    ) : (
+                      <Link2 className="h-6 w-6" />
+                    )}
+                  </div>
+                  <h3 className="mt-5 font-display text-xl font-bold text-white">
+                    {t(card.title, lang)}
+                  </h3>
+                  <p className="mt-2 text-sm leading-relaxed text-slate-300">
+                    {t(card.desc, lang)}
                   </p>
                 </div>
 
-                {/* Sample Confidence Bar */}
-                <div className="mt-4 rounded-xl border border-slate-800 bg-[#060E20] px-3.5 py-2.5">
-                  <div className="flex items-center justify-between text-[11px]">
-                    <span className="font-medium text-slate-400">
-                      {lang === 'en' ? 'Sample Threat Meter' : 'सैंपल जोखिम मीटर'}
-                    </span>
-                    <span className="font-mono font-bold text-rose-300">
-                      92 / 100
-                    </span>
-                  </div>
-                  <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-slate-800">
-                    <div className="h-full w-[92%] rounded-full bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500" />
-                  </div>
-                </div>
-
-                {/* Sample Telemetry Bars */}
-                <div className="mt-3 space-y-2">
-                  <div className="flex items-center justify-between rounded-xl border border-rose-500/25 bg-rose-500/10 px-3.5 py-2 text-xs text-rose-200">
-                    <span className="flex items-center gap-2">
-                      <ShieldAlert className="h-4 w-4 text-rose-400" />
-                      {t(translations.hero.previewSignal1, lang)}
-                    </span>
-                    <span className="font-mono text-[11px] font-semibold text-rose-300">
-                      {t(translations.hero.previewTagHigh, lang)}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between rounded-xl border border-rose-500/25 bg-rose-500/10 px-3.5 py-2 text-xs text-rose-200">
-                    <span className="flex items-center gap-2">
-                      <Link2 className="h-4 w-4 text-rose-400" />
-                      {t(translations.hero.previewSignal2, lang)}
-                    </span>
-                    <span className="font-mono text-[11px] font-semibold text-rose-300">
-                      .TOP
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between rounded-xl border border-amber-500/25 bg-amber-500/10 px-3.5 py-2 text-xs text-amber-200">
-                    <span className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-amber-400" />
-                      {t(translations.hero.previewSignal3, lang)}
-                    </span>
-                    <span className="font-mono text-[11px] font-semibold text-amber-300">
-                      {t(translations.hero.previewTagSample, lang)}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="mt-4 flex items-center justify-between border-t border-slate-800 pt-3.5 text-xs">
-                  <span className="text-slate-400">
-                    {lang === 'en'
-                      ? 'Sample Risk Score: 92/100'
-                      : 'सैंपल रिस्क स्कोर: 92/100'}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => onNavigate('message-scanner')}
-                    className="font-semibold text-cyan-300 transition hover:text-cyan-200"
-                  >
-                    {t(translations.nav.launchScanner, lang)} →
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => onNavigate(card.route)}
+                  className={`mt-6 inline-flex items-center gap-2 text-sm font-semibold transition ${
+                    isMsg
+                      ? 'text-emerald-400 hover:text-emerald-300'
+                      : 'text-[#38BDF8] hover:text-sky-300'
+                  }`}
+                >
+                  {t(card.cta, lang)}
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                </button>
               </div>
-            </div>
-          </div>
-
-          {/* Capability Metrics Bar */}
-          <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {translations.stats.items.map((item, idx) => (
-              <div
-                key={idx}
-                className="glass-panel glass-panel-hover relative overflow-hidden rounded-2xl p-5"
-              >
-                <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent" />
-                <div className="font-display text-2xl font-extrabold text-cyan-300">
-                  {t(item.value, lang)}
-                </div>
-                <div className="mt-1 text-sm font-semibold text-white">
-                  {t(item.label, lang)}
-                </div>
-                <div className="mt-0.5 text-xs text-slate-400">
-                  {t(item.sub, lang)}
-                </div>
-              </div>
-            ))}
-          </div>
+            );
+          })}
         </div>
       </section>
 
-      {/* Platform Modules Grid */}
-      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="text-center">
-          <span className="inline-flex items-center rounded-full border border-blue-400/30 bg-blue-500/10 px-3 py-1 font-mono text-xs font-medium text-blue-300">
-            {t(translations.features.badge, lang)}
-          </span>
-          <h2 className="mt-3 font-display text-3xl font-bold text-white sm:text-4xl">
-            {t(translations.features.title, lang)}
-          </h2>
-        </div>
-
-        <div className="mt-10 grid gap-6 md:grid-cols-3">
-          {translations.features.cards.map((card, idx) => (
-            <div
-              key={card.route}
-              className="glass-panel glass-panel-hover group relative flex flex-col justify-between overflow-hidden rounded-2xl p-6"
-            >
-              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/35 to-transparent opacity-60 transition-opacity group-hover:opacity-100" />
-              <div>
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-cyan-400/25 bg-gradient-to-br from-blue-600/25 to-cyan-500/15 shadow-inner shadow-cyan-500/10">
-                  {featureIcons[idx]}
-                </div>
-                <h3 className="mt-5 font-display text-xl font-bold text-white">
-                  {t(card.title, lang)}
-                </h3>
-                <p className="mt-2.5 text-sm leading-relaxed text-slate-300">
-                  {t(card.desc, lang)}
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => onNavigate(card.route)}
-                className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-cyan-300 transition hover:text-cyan-200"
-              >
-                {t(card.cta, lang)}
-                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-              </button>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* How It Works 3-Step Pipeline */}
-      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+      {/* 03 — HOW IT WORKS (Scan -> AI Analysis -> Protection) */}
+      <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         <div className="glass-panel rounded-3xl p-6 sm:p-10">
           <div className="max-w-2xl">
-            <span className="inline-flex items-center rounded-full border border-cyan-400/25 bg-cyan-500/10 px-3 py-1 font-mono text-xs font-medium text-cyan-300">
+            <span className="inline-flex items-center rounded-full border border-sky-400/30 bg-sky-500/10 px-3 py-1 font-mono text-xs font-medium text-[#38BDF8]">
               {t(translations.howItWorks.badge, lang)}
             </span>
             <h2 className="mt-3 font-display text-2xl font-bold text-white sm:text-3xl">
@@ -308,19 +366,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           </div>
 
           <div className="relative mt-8 grid gap-6 md:grid-cols-3">
-            {/* Subtle desktop pipeline connector */}
-            <div className="pointer-events-none absolute top-11 right-16 left-16 hidden h-px bg-gradient-to-r from-cyan-500/30 via-blue-500/40 to-emerald-500/30 md:block" />
+            <div className="pointer-events-none absolute top-11 right-16 left-16 hidden h-px bg-gradient-to-r from-emerald-500/40 via-[#38BDF8]/40 to-emerald-500/40 md:block" />
 
             {translations.howItWorks.steps.map((s, idx) => (
               <div
                 key={s.step}
-                className="relative rounded-2xl border border-slate-800/90 bg-[#060D1E] p-5 transition-colors hover:border-cyan-500/30"
+                className="relative rounded-2xl border border-slate-800/90 bg-[#0B1220] p-5 transition-colors hover:border-emerald-500/35"
               >
                 <div className="flex items-center justify-between">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-700 bg-[#0B1733]">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-700 bg-[#111827]">
                     {stepIcons[idx]}
                   </div>
-                  <span className="rounded-md border border-slate-800 bg-[#040914] px-2 py-0.5 font-mono text-xs font-bold text-cyan-400/80">
+                  <span className="rounded-md border border-slate-800 bg-[#111827] px-2 py-0.5 font-mono text-xs font-bold text-emerald-400">
                     {s.step}
                   </span>
                 </div>
@@ -336,12 +393,48 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         </div>
       </section>
 
-      {/* Embedded Scam Awareness Section */}
+      {/* 04 — SCAM AWARENESS */}
       <ScamAwarenessSection
         lang={lang}
         compact
         onOpenFullPage={() => onNavigate('awareness')}
       />
+
+      {/* 05 — TRUST SECTION */}
+      <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        <div className="glass-panel rounded-3xl border border-emerald-500/20 p-6 sm:p-10">
+          <div className="max-w-2xl">
+            <span className="inline-flex items-center rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 font-mono text-xs font-medium text-emerald-300">
+              {t(translations.trustSection.badge, lang)}
+            </span>
+            <h2 className="mt-3 font-display text-2xl font-bold text-white sm:text-3xl">
+              {t(translations.trustSection.title, lang)}
+            </h2>
+            <p className="mt-2 text-sm leading-relaxed text-slate-300 sm:text-base">
+              {t(translations.trustSection.subtitle, lang)}
+            </p>
+          </div>
+
+          <div className="mt-8 grid gap-5 md:grid-cols-3">
+            {translations.trustSection.items.map((item, idx) => (
+              <div
+                key={idx}
+                className="rounded-2xl border border-slate-800 bg-[#0B1220] p-5 transition-colors hover:border-emerald-500/30"
+              >
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-700 bg-[#111827]">
+                  {trustIcons[idx]}
+                </div>
+                <h3 className="mt-4 font-display text-base font-bold text-white">
+                  {t(item.title, lang)}
+                </h3>
+                <p className="mt-2 text-sm leading-relaxed text-slate-400">
+                  {t(item.desc, lang)}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
     </div>
   );
 };

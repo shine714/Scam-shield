@@ -14,70 +14,155 @@ export const translations = {
   },
   nav: {
     home: { en: 'Home', hi: 'होम' },
-    messageScanner: { en: 'Message Scanner', hi: 'मैसेज स्कैनर' },
-    urlScanner: { en: 'URL Scanner', hi: 'URL स्कैनर' },
-    awareness: { en: 'Scam Awareness', hi: 'स्कैम जागरूकता' },
+    messageScanner: { en: 'Scan Message', hi: 'मैसेज स्कैन' },
+    urlScanner: { en: 'Scan URL', hi: 'URL स्कैन' },
+    awareness: { en: 'Awareness', hi: 'जागरूकता' },
     about: { en: 'About', hi: 'हमारे बारे में' },
-    launchScanner: { en: 'Try Scanner', hi: 'स्कैनर आज़माएँ' },
+    launchScanner: { en: 'Get Started', hi: 'शुरू करें' },
     primaryAria: { en: 'Primary navigation', hi: 'मुख्य नेविगेशन' },
     languageAria: { en: 'Language switcher', hi: 'भाषा बदलें' },
     menuAria: { en: 'Toggle navigation menu', hi: 'मेनू खोलें या बंद करें' },
   },
   hero: {
     pill: {
-      en: 'AI-Powered Scam Defense • Bilingual EN / हिन्दी',
-      hi: 'AI-सक्षम स्कैम सुरक्षा • द्विभाषी EN / हिन्दी',
+      en: 'AI Cybersecurity Command • Bilingual EN / हिन्दी',
+      hi: 'AI साइबर सुरक्षा कमांड • द्विभाषी EN / हिन्दी',
     },
     titleLead: {
-      en: 'Detect Scams & Phishing',
-      hi: 'स्कैम और फ़िशिंग को पहचानें',
+      en: 'Think Before You Trust.',
+      hi: 'भरोसा करने से पहले सोचें।',
     },
     titleHighlight: {
-      en: 'Before You Click or Pay.',
-      hi: 'क्लिक या भुगतान करने से पहले।',
+      en: 'Detect scams with AI before they trap you.',
+      hi: 'जाल में फँसने से पहले AI से स्कैम पहचानें।',
     },
     subtitle: {
-      en: 'ScamShield AI is a modern cybersecurity workspace designed to inspect suspicious SMS, WhatsApp messages, emails, and deceptive URLs—empowering everyday users with clear threat signals in English and Hindi.',
-      hi: 'ScamShield AI एक आधुनिक साइबर सुरक्षा प्लेटफ़ॉर्म है जिसे संदिग्ध SMS, WhatsApp संदेशों, ईमेल और फ़र्ज़ी लिंक की जाँच के लिए बनाया गया है—ताकि हर उपयोगकर्ता हिंदी और अंग्रेज़ी में स्पष्ट चेतावनी पा सके।',
+      en: 'AI-powered scam protection for messages, links and digital threats—built to inspect suspicious SMS, WhatsApp forwards, emails, and deceptive URLs in English and Hindi.',
+      hi: 'संदेशों, लिंक और डिजिटल खतरों के लिए AI-आधारित सुरक्षा—जो हिंदी और अंग्रेज़ी में संदिग्ध SMS, WhatsApp मैसेज, ईमेल और फ़र्ज़ी लिंक की तुरंत जाँच करता है।',
     },
     ctaPrimary: {
-      en: 'Scan a Message',
+      en: 'Scan Message',
       hi: 'मैसेज स्कैन करें',
     },
     ctaSecondary: {
-      en: 'Check a Suspicious URL',
-      hi: 'संदिग्ध URL जाँचें',
+      en: 'Scan URL',
+      hi: 'URL स्कैन करें',
     },
     ctaAwareness: {
-      en: 'Explore Scam Patterns',
-      hi: 'स्कैम के तरीके जानें',
+      en: 'Explore Scam Awareness',
+      hi: 'स्कैम जागरूकता देखें',
+    },
+    quickBoxLabel: {
+      en: 'AI THREAT MESSAGE CONSOLE',
+      hi: 'AI संदेश जाँच कंसोल',
+    },
+    quickBoxPlaceholder: {
+      en: 'Paste suspicious message here... (SMS, WhatsApp forward, KYC alert, or job offer)',
+      hi: 'यहाँ संदिग्ध संदेश पेस्ट करें... (SMS, WhatsApp मैसेज, KYC अलर्ट या नौकरी का ऑफ़र)',
+    },
+    quickBoxButton: {
+      en: 'Analyze Message',
+      hi: 'संदेश का विश्लेषण करें',
+    },
+    quickBoxEmptyError: {
+      en: 'Please paste a message before running AI analysis.',
+      hi: 'AI विश्लेषण शुरू करने से पहले कृपया कोई संदेश पेस्ट करें।',
+    },
+    shieldTitle: {
+      en: 'AI Shield Core',
+      hi: 'AI शील्ड कोर',
+    },
+    shieldSubtitle: {
+      en: 'Real-Time Fraud & Phishing Inspection',
+      hi: 'रीयल-टाइम फ्रॉड और फ़िशिंग जाँच',
     },
     previewCardTitle: {
-      en: 'Sample Threat Telemetry UI',
-      hi: 'सैंपल थ्रेट टेलीमेट्री UI',
+      en: 'Sample Threat Telemetry',
+      hi: 'सैंपल थ्रेट टेलीमेट्री',
     },
     previewDemoTag: {
-      en: 'DEMO PREVIEW',
-      hi: 'डेमो प्रीव्यू',
+      en: 'SAMPLE',
+      hi: 'सैंपल',
     },
     previewMessageSnippet: {
       en: '"Dear customer, your KYC is expired. Update immediately at http://sbi-kyc-verify.top or account will be blocked in 2 hrs."',
       hi: '"प्रिय ग्राहक, आपका KYC समाप्त हो गया है। खाता बंद होने से बचाने के लिए तुरंत http://sbi-kyc-verify.top पर अपडेट करें।"',
     },
     previewSignal1: {
-      en: 'Artificial 2-hour urgency detected',
-      hi: '2 घंटे की नकली जल्दबाज़ी का संकेत',
+      en: 'Artificial urgency detected',
+      hi: 'नकली जल्दबाज़ी का संकेत',
     },
     previewSignal2: {
-      en: 'Unverified lookalike .top domain',
-      hi: 'असली बैंक जैसा नकली .top लिंक',
+      en: 'Lookalike .top phishing URL',
+      hi: 'नकली .top फ़िशिंग लिंक',
     },
     previewSignal3: {
-      en: 'Credential harvesting pattern',
-      hi: 'खाता जानकारी चुराने का तरीका',
+      en: 'OTP / credential harvest lure',
+      hi: 'OTP / खाता जानकारी चोरी का जाल',
     },
     previewTagHigh: { en: 'HIGH', hi: 'उच्च' },
     previewTagSample: { en: 'SAMPLE', hi: 'सैंपल' },
+  },
+  quickScan: {
+    badge: { en: 'QUICK SCAN MODULES', hi: 'त्वरित स्कैन मॉड्यूल' },
+    title: {
+      en: 'Choose a Security Scanner',
+      hi: 'सुरक्षा स्कैनर चुनें',
+    },
+    cards: [
+      {
+        title: { en: 'Message Scanner', hi: 'मैसेज स्कैनर' },
+        desc: {
+          en: 'Detect suspicious SMS, WhatsApp messages, emails, urgency traps, and impersonation scams.',
+          hi: 'संदिग्ध SMS, WhatsApp संदेश, ईमेल, जल्दबाज़ी की चाल और नकली पहचान स्कैम पहचानें।',
+        },
+        cta: { en: 'Analyze a Message', hi: 'मैसेज जाँचें' },
+        route: 'message-scanner' as const,
+      },
+      {
+        title: { en: 'URL Scanner', hi: 'URL स्कैनर' },
+        desc: {
+          en: 'Check suspicious websites and links safely without visiting them—domain, IP, and threat checks.',
+          hi: 'संदिग्ध वेबसाइट और लिंक को खोले बिना सुरक्षित रूप से जाँचें—डोमेन, IP और थ्रेट जाँच।',
+        },
+        cta: { en: 'Inspect a URL', hi: 'URL जाँचें' },
+        route: 'url-scanner' as const,
+      },
+    ],
+  },
+  trustSection: {
+    badge: { en: 'TRUST & PRIVACY ARCHITECTURE', hi: 'विश्वास और गोपनीयता सुरक्षा' },
+    title: {
+      en: 'Your Digital Safety Matters.',
+      hi: 'आपकी डिजिटल सुरक्षा सबसे महत्वपूर्ण है।',
+    },
+    subtitle: {
+      en: 'Privacy-focused design, responsible AI analysis, and clear warnings without storing your messages or opening dangerous links.',
+      hi: 'गोपनीयता-केंद्रित डिज़ाइन, ज़िम्मेदार AI विश्लेषण और स्पष्ट चेतावनी—बिना संदेश सहेजे और बिना खतरनाक लिंक खोले।',
+    },
+    items: [
+      {
+        title: { en: 'Privacy-Focused Backend', hi: 'गोपनीयता-सुरक्षित बैकएंड' },
+        desc: {
+          en: 'Messages are analyzed transiently on the server without database storage or browser-exposed API keys.',
+          hi: 'संदेशों की जाँच सर्वर पर अस्थायी रूप से होती है—डेटाबेस में कोई संदेश सेव नहीं होता।',
+        },
+      },
+      {
+        title: { en: 'Responsible AI Signals', hi: 'ज़िम्मेदार AI संकेत' },
+        desc: {
+          en: 'Every risk score includes transparent red flags, flagged phrases, and accuracy reminders—never guesswork.',
+          hi: 'हर रिस्क स्कोर के साथ स्पष्ट कारण, संदिग्ध शब्द और पारदर्शी सुरक्षा सलाह दी जाती है।',
+        },
+      },
+      {
+        title: { en: 'Zero-Visit Link Defense', hi: 'शून्य-विज़िट लिंक सुरक्षा' },
+        desc: {
+          en: 'Suspicious URLs are inspected lexically and against threat lists without fetching or rendering the target site.',
+          hi: 'संदिग्ध लिंक को कभी खोले या लोड किए बिना उसकी संरचना और डोमेन पैटर्न की जाँच होती है।',
+        },
+      },
+    ],
   },
   stats: {
     title: {
@@ -317,6 +402,9 @@ export const translations = {
       en: 'Re-check Backend Status',
       hi: 'बैकएंड स्थिति फिर जाँचें',
     },
+    copyReport: { en: 'Copy Report', hi: 'रिपोर्ट कॉपी करें' },
+    copiedReport: { en: 'Copied!', hi: 'कॉपी हो गया!' },
+    scanAgain: { en: 'Scan Again', hi: 'दोबारा स्कैन करें' },
   },
   urlScanner: {
     badge: { en: 'SAFE URL INSPECTION', hi: 'सुरक्षित URL जाँच' },

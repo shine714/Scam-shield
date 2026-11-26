@@ -1,8 +1,10 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   AlertCircle,
   AlertTriangle,
+  Check,
   CheckCircle2,
+  Copy,
   Database,
   Eraser,
   Globe,
@@ -11,6 +13,7 @@ import {
   Loader2,
   Lock,
   RefreshCw,
+  RotateCcw,
   ScanSearch,
   ServerCrash,
   ShieldAlert,
@@ -87,6 +90,7 @@ function validateClientUrl(raw: string): {
 export const UrlScannerPage: React.FC<UrlScannerPageProps> = ({ lang }) => {
   const [urlInput, setUrlInput] = useState<string>('');
   const [isScanning, setIsScanning] = useState(false);
+  const [copied, setCopied] = useState(false);
   const [validationError, setValidationError] = useState<{
     en: string;
     hi: string;
@@ -97,6 +101,7 @@ export const UrlScannerPage: React.FC<UrlScannerPageProps> = ({ lang }) => {
 
   const [health, setHealth] = useState<BackendHealthStatus | null>(null);
   const [checkingHealth, setCheckingHealth] = useState<boolean>(true);
+  const inputRef = useRef<HTMLInputElement | null>(null);
 
   const fetchHealth = useCallback(async () => {
     setCheckingHealth(true);
@@ -142,6 +147,37 @@ export const UrlScannerPage: React.FC<UrlScannerPageProps> = ({ lang }) => {
     setValidationError(null);
     setApiError(null);
     setAnalysisResponse(null);
+    setCopied(false);
+  };
+
+  const handleScanAgain = () => {
+    setAnalysisResponse(null);
+    setApiError(null);
+    setValidationError(null);
+    setCopied(false);
+    inputRef.current?.focus();
+  };
+
+  const handleCopyReport = async () => {
+    if (!analysisResponse) return;
+    const { result } = analysisResponse;
+    const lines = [
+      `ScamShield AI — ${t(translations.urlScanner.resultHeader, lang)}`,
+      `URL: ${result.facts.normalizedUrl}`,
+      `Score: ${result.riskScore}/100 (${t(result.verdictTitle, lang)})`,
+      ``,
+      t(result.explanation, lang),
+      ``,
+      `${t(translations.urlScanner.actionTitle, lang)}:`,
+      ...result.safetyRecommendations[lang].map((r) => `- ${r}`),
+    ];
+    try {
+      await navigator.clipboard.writeText(lines.join('\n'));
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Ignore clipboard failures
+    }
   };
 
   const handleScan = async (e: React.FormEvent) => {
@@ -154,6 +190,7 @@ export const UrlScannerPage: React.FC<UrlScannerPageProps> = ({ lang }) => {
 
     setValidationError(null);
     setApiError(null);
+    setCopied(false);
     setIsScanning(true);
 
     const controller = new AbortController();
@@ -217,8 +254,8 @@ export const UrlScannerPage: React.FC<UrlScannerPageProps> = ({ lang }) => {
   const renderStatusPill = () => {
     if (checkingHealth) {
       return (
-        <div className="inline-flex items-center gap-2 rounded-full border border-slate-700 bg-[#070F22] px-3.5 py-1.5 text-xs text-slate-300">
-          <Loader2 className="h-3.5 w-3.5 animate-spin text-cyan-400" />
+        <div className="inline-flex items-center gap-2 rounded-full border border-slate-700 bg-[#111827] px-3.5 py-1.5 text-xs text-slate-300">
+          <Loader2 className="h-3.5 w-3.5 animate-spin text-[#38BDF8]" />
           <span>{t(translations.urlScanner.statusChecking, lang)}</span>
         </div>
       );
@@ -235,8 +272,8 @@ export const UrlScannerPage: React.FC<UrlScannerPageProps> = ({ lang }) => {
 
     if (health?.urlReputationConfigured) {
       return (
-        <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/35 bg-emerald-500/10 px-3.5 py-1.5 text-xs font-medium text-emerald-200">
-          <span className="h-2 w-2 rounded-full bg-emerald-400" />
+        <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/35 bg-emerald-500/10 px-3.5 py-1.5 text-xs font-medium text-emerald-300">
+          <span className="h-2 w-2 rounded-full bg-[#16A34A]" />
           <span>
             {t(translations.urlScanner.statusReputationReady, lang)}
             {health.urlReputationProvider
@@ -264,7 +301,7 @@ export const UrlScannerPage: React.FC<UrlScannerPageProps> = ({ lang }) => {
       {/* Page Header */}
       <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
         <div>
-          <span className="inline-flex items-center gap-2 rounded-full border border-blue-400/30 bg-blue-500/10 px-3 py-1 font-mono text-xs font-medium text-blue-300">
+          <span className="inline-flex items-center gap-2 rounded-full border border-sky-400/30 bg-sky-500/10 px-3 py-1 font-mono text-xs font-medium text-[#38BDF8]">
             <Link2 className="h-3.5 w-3.5" />
             {t(translations.urlScanner.badge, lang)}
           </span>
@@ -282,7 +319,7 @@ export const UrlScannerPage: React.FC<UrlScannerPageProps> = ({ lang }) => {
             type="button"
             onClick={() => void fetchHealth()}
             disabled={checkingHealth}
-            className="inline-flex items-center gap-1.5 rounded-full border border-slate-700 bg-[#081022] px-3 py-1.5 text-xs text-slate-300 transition hover:border-cyan-400/40 hover:text-white disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 rounded-full border border-slate-700 bg-[#111827] px-3 py-1.5 text-xs text-slate-300 transition hover:border-emerald-400/40 hover:text-white disabled:opacity-50"
             aria-label={
               lang === 'en' ? 'Refresh backend status' : 'बैकएंड स्थिति फिर जाँचें'
             }
@@ -295,8 +332,8 @@ export const UrlScannerPage: React.FC<UrlScannerPageProps> = ({ lang }) => {
       </div>
 
       {/* Zero-Visit Safety Banner */}
-      <div className="mt-6 flex items-center gap-2.5 rounded-xl border border-cyan-500/25 bg-cyan-500/10 px-4 py-2.5 text-xs text-cyan-100">
-        <ShieldOff className="h-4 w-4 shrink-0 text-cyan-300" />
+      <div className="mt-6 flex items-center gap-2.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-2.5 text-xs text-emerald-200">
+        <ShieldOff className="h-4 w-4 shrink-0 text-emerald-400" />
         <span>{t(translations.urlScanner.safeInspectionNotice, lang)}</span>
       </div>
 
@@ -311,8 +348,9 @@ export const UrlScannerPage: React.FC<UrlScannerPageProps> = ({ lang }) => {
 
         <div className="mt-2.5 flex flex-col gap-3 sm:flex-row">
           <div className="relative flex-1">
-            <Globe className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-cyan-400" />
+            <Globe className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#38BDF8]" />
             <input
+              ref={inputRef}
               id="url-scanner-input"
               type="text"
               value={urlInput}
@@ -322,7 +360,7 @@ export const UrlScannerPage: React.FC<UrlScannerPageProps> = ({ lang }) => {
                 setApiError(null);
               }}
               placeholder={t(translations.urlScanner.inputPlaceholder, lang)}
-              className="w-full rounded-xl border border-slate-700/80 bg-[#050B18] py-3.5 pl-11 pr-4 font-mono text-sm text-slate-100 placeholder-slate-500 transition focus:border-cyan-400/60 focus:outline-none focus:ring-2 focus:ring-cyan-500/20"
+              className="w-full rounded-xl border border-slate-700/80 bg-[#0B1220] py-3.5 pl-11 pr-4 font-mono text-sm text-slate-100 placeholder-slate-500 transition focus:border-emerald-500/60 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
             />
           </div>
 
@@ -331,7 +369,7 @@ export const UrlScannerPage: React.FC<UrlScannerPageProps> = ({ lang }) => {
               type="button"
               onClick={handleClear}
               disabled={isScanning}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-slate-700 bg-[#081022] px-4 py-3.5 text-sm font-medium text-slate-300 transition hover:border-slate-500 hover:text-white disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-slate-700 bg-[#0B1220] px-4 py-3.5 text-sm font-medium text-slate-300 transition hover:border-slate-500 hover:text-white disabled:opacity-50"
             >
               <Eraser className="h-4 w-4" />
               {t(translations.urlScanner.clearButton, lang)}
@@ -340,7 +378,7 @@ export const UrlScannerPage: React.FC<UrlScannerPageProps> = ({ lang }) => {
             <button
               type="submit"
               disabled={isScanning}
-              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-cyan-500/20 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-65"
+              className="inline-flex items-center gap-2 rounded-xl bg-[#16A34A] px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-emerald-600/25 transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-65"
             >
               {isScanning ? (
                 <>
@@ -377,7 +415,7 @@ export const UrlScannerPage: React.FC<UrlScannerPageProps> = ({ lang }) => {
               key={sample.id}
               type="button"
               onClick={() => handleFillSample(sample.url)}
-              className="rounded-xl border border-slate-700/80 bg-[#070F22] px-3 py-1.5 text-xs font-medium text-slate-300 transition hover:border-cyan-400/50 hover:text-cyan-200"
+              className="rounded-xl border border-slate-700/80 bg-[#0B1220] px-3 py-1.5 text-xs font-medium text-slate-300 transition hover:border-emerald-400/50 hover:text-emerald-300"
             >
               {t(sample.label, lang)}
             </button>
@@ -392,20 +430,47 @@ export const UrlScannerPage: React.FC<UrlScannerPageProps> = ({ lang }) => {
             {t(translations.urlScanner.resultHeader, lang)}
           </h2>
           {result && (
-            <span className="rounded-lg border border-slate-700 bg-[#060D1E] px-3 py-1 font-mono text-xs text-slate-300">
-              {t(translations.urlScanner.heuristicSectionBadge, lang)} •{' '}
-              {result.reputation.configured
-                ? result.reputation.provider
-                : t(translations.urlScanner.reputationNotConfigured, lang)}
-            </span>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="rounded-lg border border-slate-700 bg-[#0B1220] px-3 py-1 font-mono text-xs text-slate-300">
+                {t(translations.urlScanner.heuristicSectionBadge, lang)} •{' '}
+                {result.reputation.configured
+                  ? result.reputation.provider
+                  : t(translations.urlScanner.reputationNotConfigured, lang)}
+              </span>
+              <button
+                type="button"
+                onClick={() => void handleCopyReport()}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-700 bg-[#0B1220] px-2.5 py-1 text-xs font-medium text-slate-200 transition hover:border-sky-400/50 hover:text-[#38BDF8]"
+              >
+                {copied ? (
+                  <>
+                    <Check className="h-3.5 w-3.5 text-emerald-400" />
+                    {t(translations.messageScanner.copiedReport, lang)}
+                  </>
+                ) : (
+                  <>
+                    <Copy className="h-3.5 w-3.5" />
+                    {t(translations.messageScanner.copyReport, lang)}
+                  </>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={handleScanAgain}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-500/35 bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold text-emerald-300 transition hover:bg-emerald-500/20"
+              >
+                <RotateCcw className="h-3.5 w-3.5" />
+                {t(translations.messageScanner.scanAgain, lang)}
+              </button>
+            </div>
           )}
         </div>
 
         {/* Loading State */}
         {isScanning && (
-          <div className="mt-8 flex flex-col items-center justify-center rounded-2xl border border-cyan-500/25 bg-[#050B18]/80 px-6 py-16 text-center">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-cyan-400/35 bg-cyan-500/15">
-              <Loader2 className="h-7 w-7 animate-spin text-cyan-300" />
+          <div className="mt-8 flex flex-col items-center justify-center rounded-2xl border border-emerald-500/25 bg-[#0B1220]/90 px-6 py-16 text-center">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-emerald-400/35 bg-emerald-500/15">
+              <Loader2 className="h-7 w-7 animate-spin text-emerald-400" />
             </div>
             <p className="mt-4 font-display text-lg font-bold text-white">
               {t(translations.urlScanner.scanningButton, lang)}
@@ -440,8 +505,8 @@ export const UrlScannerPage: React.FC<UrlScannerPageProps> = ({ lang }) => {
 
         {/* Idle State */}
         {!isScanning && !apiError && !result && (
-          <div className="mt-8 flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-700/80 bg-[#050B18]/70 px-6 py-14 text-center">
-            <Link2 className="h-10 w-10 text-cyan-400/70" />
+          <div className="mt-8 flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-700/80 bg-[#0B1220]/70 px-6 py-14 text-center">
+            <Link2 className="h-10 w-10 text-emerald-400/75" />
             <h3 className="mt-4 font-display text-lg font-bold text-white">
               {t(translations.urlScanner.idleTitle, lang)}
             </h3>
@@ -465,7 +530,7 @@ export const UrlScannerPage: React.FC<UrlScannerPageProps> = ({ lang }) => {
                 />
               </div>
 
-              <div className="flex flex-col justify-between rounded-2xl border border-slate-800/90 bg-[#060E20]/80 p-5 lg:col-span-9">
+              <div className="flex flex-col justify-between rounded-2xl border border-slate-800/90 bg-[#111827] p-5 lg:col-span-9">
                 <div>
                   <h3 className="font-display text-xl font-bold text-white">
                     {t(result.verdictTitle, lang)}
@@ -475,11 +540,11 @@ export const UrlScannerPage: React.FC<UrlScannerPageProps> = ({ lang }) => {
                   </p>
 
                   {/* Non-clickable inspected URL box */}
-                  <div className="mt-4 rounded-xl border border-slate-800 bg-[#040914] px-3.5 py-2.5">
+                  <div className="mt-4 rounded-xl border border-slate-800 bg-[#0B1220] px-3.5 py-2.5">
                     <span className="block text-[10px] font-semibold uppercase tracking-wider text-slate-400">
                       {t(translations.urlScanner.factsLabels.normalized, lang)}
                     </span>
-                    <code className="mt-1 block break-all font-mono text-xs text-cyan-200">
+                    <code className="mt-1 block break-all font-mono text-xs text-[#38BDF8]">
                       {result.facts.normalizedUrl}
                     </code>
                   </div>
@@ -495,18 +560,18 @@ export const UrlScannerPage: React.FC<UrlScannerPageProps> = ({ lang }) => {
             {/* Distinct Two-Column Split: 1. Heuristic Analysis vs 2. External Reputation */}
             <div className="grid gap-5 lg:grid-cols-12">
               {/* 1. Local Heuristic & Structural Facts */}
-              <div className="rounded-2xl border border-slate-800 bg-[#060D1E] p-5 lg:col-span-7">
+              <div className="rounded-2xl border border-slate-800 bg-[#0B1220] p-5 lg:col-span-7">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <h4 className="font-display text-base font-bold text-white">
                     {t(translations.urlScanner.heuristicSectionTitle, lang)}
                   </h4>
-                  <span className="rounded-full border border-cyan-400/30 bg-cyan-500/10 px-2.5 py-0.5 font-mono text-[10px] font-semibold text-cyan-300">
+                  <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 font-mono text-[10px] font-semibold text-emerald-300">
                     {result.heuristicScore} / 100
                   </span>
                 </div>
 
                 <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                  <div className="rounded-xl border border-slate-800 bg-[#050B18] p-3">
+                  <div className="rounded-xl border border-slate-800 bg-[#111827] p-3">
                     <span className="text-[11px] text-slate-400">
                       {t(translations.urlScanner.factsLabels.domain, lang)}
                     </span>
@@ -515,9 +580,9 @@ export const UrlScannerPage: React.FC<UrlScannerPageProps> = ({ lang }) => {
                     </p>
                   </div>
 
-                  <div className="rounded-xl border border-slate-800 bg-[#050B18] p-3">
+                  <div className="rounded-xl border border-slate-800 bg-[#111827] p-3">
                     <span className="flex items-center gap-1 text-[11px] text-slate-400">
-                      <Lock className="h-3 w-3 text-cyan-400" />
+                      <Lock className="h-3 w-3 text-[#38BDF8]" />
                       {t(translations.urlScanner.factsLabels.protocol, lang)}
                     </span>
                     <p className="mt-1 font-mono text-xs font-semibold uppercase text-white">
@@ -530,7 +595,7 @@ export const UrlScannerPage: React.FC<UrlScannerPageProps> = ({ lang }) => {
                     </p>
                   </div>
 
-                  <div className="rounded-xl border border-slate-800 bg-[#050B18] p-3">
+                  <div className="rounded-xl border border-slate-800 bg-[#111827] p-3">
                     <span className="text-[11px] text-slate-400">
                       {t(translations.urlScanner.factsLabels.subdomains, lang)}
                     </span>
@@ -539,41 +604,44 @@ export const UrlScannerPage: React.FC<UrlScannerPageProps> = ({ lang }) => {
                     </p>
                   </div>
 
-                  <div className="rounded-xl border border-slate-800 bg-[#050B18] p-3">
+                  <div className="rounded-xl border border-slate-800 bg-[#111827] p-3">
                     <span className="text-[11px] text-slate-400">
                       {t(translations.urlScanner.factsLabels.ipCheck, lang)}
                     </span>
                     <p
-                      className={`mt-1 font-mono text-xs font-semibold ${result.facts.isIpAddress ? 'text-rose-300' : 'text-slate-200'
-                        }`}
+                      className={`mt-1 font-mono text-xs font-semibold ${
+                        result.facts.isIpAddress ? 'text-rose-300' : 'text-slate-200'
+                      }`}
                     >
                       {result.facts.isIpAddress ? yesLabel : noLabel}
                     </p>
                   </div>
 
-                  <div className="rounded-xl border border-slate-800 bg-[#050B18] p-3">
+                  <div className="rounded-xl border border-slate-800 bg-[#111827] p-3">
                     <span className="text-[11px] text-slate-400">
                       {t(translations.urlScanner.factsLabels.idnCheck, lang)}
                     </span>
                     <p
-                      className={`mt-1 font-mono text-xs font-semibold ${result.facts.hasPunycodeOrIdn
+                      className={`mt-1 font-mono text-xs font-semibold ${
+                        result.facts.hasPunycodeOrIdn
                           ? 'text-rose-300'
                           : 'text-slate-200'
-                        }`}
+                      }`}
                     >
                       {result.facts.hasPunycodeOrIdn ? yesLabel : noLabel}
                     </p>
                   </div>
 
-                  <div className="rounded-xl border border-slate-800 bg-[#050B18] p-3">
+                  <div className="rounded-xl border border-slate-800 bg-[#111827] p-3">
                     <span className="text-[11px] text-slate-400">
                       {t(translations.urlScanner.factsLabels.atTrick, lang)}
                     </span>
                     <p
-                      className={`mt-1 font-mono text-xs font-semibold ${result.facts.hasEmbeddedCredentials
+                      className={`mt-1 font-mono text-xs font-semibold ${
+                        result.facts.hasEmbeddedCredentials
                           ? 'text-rose-300'
                           : 'text-slate-200'
-                        }`}
+                      }`}
                     >
                       {result.facts.hasEmbeddedCredentials ? yesLabel : noLabel}
                     </p>
@@ -582,22 +650,23 @@ export const UrlScannerPage: React.FC<UrlScannerPageProps> = ({ lang }) => {
               </div>
 
               {/* 2. External Reputation Lookup Card */}
-              <div className="flex flex-col justify-between rounded-2xl border border-slate-800 bg-[#060D1E] p-5 lg:col-span-5">
+              <div className="flex flex-col justify-between rounded-2xl border border-slate-800 bg-[#0B1220] p-5 lg:col-span-5">
                 <div>
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <h4 className="flex items-center gap-2 font-display text-base font-bold text-white">
-                      <Database className="h-4 w-4 text-cyan-400" />
+                      <Database className="h-4 w-4 text-[#38BDF8]" />
                       {t(translations.urlScanner.reputationSectionTitle, lang)}
                     </h4>
                     <span
-                      className={`rounded-full border px-2.5 py-0.5 font-mono text-[10px] font-semibold ${result.reputation.status === 'threat_found'
+                      className={`rounded-full border px-2.5 py-0.5 font-mono text-[10px] font-semibold ${
+                        result.reputation.status === 'threat_found'
                           ? 'border-rose-500/40 bg-rose-500/15 text-rose-200'
                           : result.reputation.status === 'no_match_found'
                             ? 'border-emerald-500/40 bg-emerald-500/15 text-emerald-200'
                             : result.reputation.status === 'error'
                               ? 'border-rose-500/40 bg-rose-500/15 text-rose-200'
                               : 'border-amber-400/40 bg-amber-500/15 text-amber-200'
-                        }`}
+                      }`}
                     >
                       {result.reputation.status === 'threat_found'
                         ? t(translations.urlScanner.reputationThreat, lang)
@@ -606,9 +675,9 @@ export const UrlScannerPage: React.FC<UrlScannerPageProps> = ({ lang }) => {
                           : result.reputation.status === 'error'
                             ? t(translations.urlScanner.reputationError, lang)
                             : t(
-                              translations.urlScanner.reputationNotConfigured,
-                              lang
-                            )}
+                                translations.urlScanner.reputationNotConfigured,
+                                lang
+                              )}
                     </span>
                   </div>
 
@@ -634,7 +703,7 @@ export const UrlScannerPage: React.FC<UrlScannerPageProps> = ({ lang }) => {
                 </div>
 
                 {!result.reputation.configured && (
-                  <div className="mt-4 rounded-xl border border-slate-800 bg-[#040914] p-3 text-xs leading-relaxed text-slate-400">
+                  <div className="mt-4 rounded-xl border border-slate-800 bg-[#111827] p-3 text-xs leading-relaxed text-slate-400">
                     {t(translations.urlScanner.reputationSetupHint, lang)}
                   </div>
                 )}
@@ -649,9 +718,9 @@ export const UrlScannerPage: React.FC<UrlScannerPageProps> = ({ lang }) => {
                 </h4>
 
                 {result.indicators.length === 0 ? (
-                  <div className="rounded-xl border border-slate-800 bg-[#060D1E] p-4">
+                  <div className="rounded-xl border border-slate-800 bg-[#0B1220] p-4">
                     <div className="flex items-center gap-2 text-sm font-semibold text-slate-200">
-                      <Info className="h-4 w-4 text-cyan-400" />
+                      <Info className="h-4 w-4 text-[#38BDF8]" />
                       <span>
                         {t(translations.urlScanner.noIndicatorsTitle, lang)}
                       </span>
@@ -664,7 +733,7 @@ export const UrlScannerPage: React.FC<UrlScannerPageProps> = ({ lang }) => {
                   result.indicators.map((ind) => (
                     <div
                       key={ind.id}
-                      className="flex items-start gap-3 rounded-xl border border-slate-800 bg-[#060D1E] p-3.5"
+                      className="flex items-start gap-3 rounded-xl border border-slate-800 bg-[#0B1220] p-3.5"
                     >
                       <div className="mt-0.5">
                         {ind.severity === 'high' ? (
@@ -672,7 +741,7 @@ export const UrlScannerPage: React.FC<UrlScannerPageProps> = ({ lang }) => {
                         ) : ind.severity === 'medium' ? (
                           <AlertCircle className="h-4 w-4 text-amber-400" />
                         ) : (
-                          <Info className="h-4 w-4 text-cyan-400" />
+                          <Info className="h-4 w-4 text-[#38BDF8]" />
                         )}
                       </div>
                       <div className="flex-1">
@@ -681,12 +750,13 @@ export const UrlScannerPage: React.FC<UrlScannerPageProps> = ({ lang }) => {
                             {t(ind.title, lang)}
                           </p>
                           <span
-                            className={`rounded-md px-2 py-0.5 font-mono text-[10px] font-semibold uppercase ${ind.severity === 'high'
+                            className={`rounded-md px-2 py-0.5 font-mono text-[10px] font-semibold uppercase ${
+                              ind.severity === 'high'
                                 ? 'bg-rose-500/20 text-rose-300'
                                 : ind.severity === 'medium'
                                   ? 'bg-amber-500/20 text-amber-300'
-                                  : 'bg-cyan-500/20 text-cyan-300'
-                              }`}
+                                  : 'bg-sky-500/20 text-[#38BDF8]'
+                            }`}
                           >
                             {t(translations.severityLabels[ind.severity], lang)}
                           </span>
@@ -700,9 +770,9 @@ export const UrlScannerPage: React.FC<UrlScannerPageProps> = ({ lang }) => {
                 )}
               </div>
 
-              <div className="rounded-2xl border border-cyan-500/25 bg-cyan-500/10 p-5 lg:col-span-5">
-                <div className="flex items-center gap-2 text-cyan-200">
-                  <ShieldCheck className="h-5 w-5 shrink-0 text-cyan-300" />
+              <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-5 lg:col-span-5">
+                <div className="flex items-center gap-2 text-emerald-300">
+                  <ShieldCheck className="h-5 w-5 shrink-0 text-emerald-400" />
                   <h4 className="text-xs font-semibold uppercase tracking-wider">
                     {t(translations.urlScanner.actionTitle, lang)}
                   </h4>
@@ -713,7 +783,7 @@ export const UrlScannerPage: React.FC<UrlScannerPageProps> = ({ lang }) => {
                       key={idx}
                       className="flex items-start gap-2.5 text-sm leading-relaxed text-slate-100"
                     >
-                      <CheckCircle2 className="mt-1 h-4 w-4 shrink-0 text-cyan-300" />
+                      <CheckCircle2 className="mt-1 h-4 w-4 shrink-0 text-emerald-400" />
                       <span>{rec}</span>
                     </li>
                   ))}

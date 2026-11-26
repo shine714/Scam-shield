@@ -141,11 +141,11 @@ export const ScamAwarenessSection: React.FC<ScamAwarenessSectionProps> = ({
   ];
 
   return (
-    <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+    <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
       {/* Header */}
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <div>
-          <span className="inline-flex items-center gap-2 rounded-full border border-cyan-400/25 bg-cyan-500/10 px-3 py-1 font-mono text-xs font-medium text-cyan-300">
+          <span className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 font-mono text-xs font-medium text-emerald-300">
             <AlertTriangle className="h-3.5 w-3.5" />
             {t(translations.awareness.badge, lang)}
           </span>
@@ -161,7 +161,7 @@ export const ScamAwarenessSection: React.FC<ScamAwarenessSectionProps> = ({
           <button
             type="button"
             onClick={onOpenFullPage}
-            className="self-start rounded-xl border border-cyan-400/30 bg-cyan-500/10 px-4 py-2.5 text-sm font-semibold text-cyan-200 transition hover:bg-cyan-500/20 md:self-auto"
+            className="self-start rounded-xl border border-emerald-500/35 bg-emerald-500/10 px-4 py-2.5 text-sm font-semibold text-emerald-300 transition hover:bg-emerald-500/20 md:self-auto"
           >
             {t(translations.hero.ctaAwareness, lang)} →
           </button>
@@ -184,8 +184,8 @@ export const ScamAwarenessSection: React.FC<ScamAwarenessSectionProps> = ({
                     onClick={() => setGroupFilter(pill.id)}
                     className={`rounded-xl border px-3 py-1.5 text-xs font-semibold transition ${
                       active
-                        ? 'border-cyan-400/50 bg-gradient-to-r from-blue-600/30 to-cyan-500/20 text-cyan-100'
-                        : 'border-slate-700/80 bg-[#081022] text-slate-300 hover:border-slate-500 hover:text-white'
+                        ? 'border-emerald-500/50 bg-[#16A34A] text-white'
+                        : 'border-slate-700/80 bg-[#0B1220] text-slate-300 hover:border-slate-500 hover:text-white'
                     }`}
                   >
                     {pill.label}
@@ -203,14 +203,14 @@ export const ScamAwarenessSection: React.FC<ScamAwarenessSectionProps> = ({
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder={t(translations.awareness.searchPlaceholder, lang)}
-                  className="w-full rounded-xl border border-slate-700/80 bg-[#050B18] py-2 pl-9 pr-3 text-xs text-slate-100 placeholder-slate-500 focus:border-cyan-400/60 focus:outline-none"
+                  className="w-full rounded-xl border border-slate-700/80 bg-[#0B1220] py-2 pl-9 pr-3 text-xs text-slate-100 placeholder-slate-500 focus:border-emerald-500/60 focus:outline-none"
                 />
               </div>
 
               <button
                 type="button"
                 onClick={handleToggleAll}
-                className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-700 bg-[#081022] px-3.5 py-2 text-xs font-semibold text-cyan-200 transition hover:border-cyan-400/40"
+                className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-700 bg-[#0B1220] px-3.5 py-2 text-xs font-semibold text-emerald-300 transition hover:border-emerald-400/40"
               >
                 {allFilteredExpanded ? (
                   <>
@@ -239,7 +239,7 @@ export const ScamAwarenessSection: React.FC<ScamAwarenessSectionProps> = ({
                   setGroupFilter('all');
                   setSearchQuery('');
                 }}
-                className="mt-4 rounded-xl border border-cyan-400/35 bg-cyan-500/15 px-4 py-2 text-xs font-semibold text-cyan-200 transition hover:bg-cyan-500/25"
+                className="mt-4 rounded-xl border border-emerald-500/35 bg-emerald-500/15 px-4 py-2 text-xs font-semibold text-emerald-200 transition hover:bg-emerald-500/25"
               >
                 {t(translations.awareness.clearFilter, lang)}
               </button>
@@ -253,7 +253,7 @@ export const ScamAwarenessSection: React.FC<ScamAwarenessSectionProps> = ({
                   <div
                     key={cat.id}
                     className={`glass-panel rounded-2xl transition-colors ${
-                      isExpanded ? 'border-cyan-400/35' : ''
+                      isExpanded ? 'border-emerald-500/40' : ''
                     }`}
                   >
                     {/* Card Header Toggle */}
@@ -264,7 +264,7 @@ export const ScamAwarenessSection: React.FC<ScamAwarenessSectionProps> = ({
                       className="flex w-full items-start justify-between gap-4 p-5 text-left"
                     >
                       <div className="flex items-start gap-3.5">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-cyan-400/25 bg-gradient-to-br from-blue-600/20 to-cyan-500/15 text-cyan-300">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-emerald-500/30 bg-emerald-500/15 text-emerald-400">
                           {categoryIcons[cat.id] ?? (
                             <ShieldAlert className="h-4 w-4" />
                           )}
@@ -274,7 +274,7 @@ export const ScamAwarenessSection: React.FC<ScamAwarenessSectionProps> = ({
                             <h3 className="font-display text-lg font-bold text-white">
                               {t(cat.title, lang)}
                             </h3>
-                            <span className="rounded-full border border-blue-400/30 bg-blue-500/15 px-2.5 py-0.5 font-mono text-[10px] font-medium text-blue-300">
+                            <span className="rounded-full border border-sky-400/30 bg-sky-500/15 px-2.5 py-0.5 font-mono text-[10px] font-medium text-[#38BDF8]">
                               {t(cat.badge, lang)}
                             </span>
                           </div>
@@ -284,9 +284,9 @@ export const ScamAwarenessSection: React.FC<ScamAwarenessSectionProps> = ({
                         </div>
                       </div>
 
-                      <span className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-700/80 bg-[#070F22] text-slate-300">
+                      <span className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-700/80 bg-[#0B1220] text-slate-300">
                         {isExpanded ? (
-                          <ChevronUp className="h-4 w-4 text-cyan-300" />
+                          <ChevronUp className="h-4 w-4 text-emerald-400" />
                         ) : (
                           <ChevronDown className="h-4 w-4" />
                         )}
@@ -339,7 +339,7 @@ export const ScamAwarenessSection: React.FC<ScamAwarenessSectionProps> = ({
                           <button
                             type="button"
                             onClick={() => toggleExample(cat.id)}
-                            className="inline-flex items-center gap-1.5 text-xs font-semibold text-cyan-300 transition hover:text-cyan-200"
+                            className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#38BDF8] transition hover:text-sky-300"
                           >
                             <MessageSquareQuote className="h-3.5 w-3.5" />
                             {showExample
@@ -348,7 +348,7 @@ export const ScamAwarenessSection: React.FC<ScamAwarenessSectionProps> = ({
                           </button>
 
                           {showExample && (
-                            <div className="mt-2 rounded-xl border border-rose-500/25 bg-[#050B18] p-3 font-mono text-xs leading-relaxed text-rose-200">
+                            <div className="mt-2 rounded-xl border border-rose-500/25 bg-[#0B1220] p-3 font-mono text-xs leading-relaxed text-rose-200">
                               {t(cat.exampleLure, lang)}
                             </div>
                           )}
@@ -377,12 +377,12 @@ export const ScamAwarenessSection: React.FC<ScamAwarenessSectionProps> = ({
                     onClick={() => setActiveCategoryId(cat.id)}
                     className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold transition ${
                       selected
-                        ? 'border-cyan-400/50 bg-gradient-to-r from-blue-600/30 to-cyan-500/20 text-cyan-100 shadow-sm shadow-cyan-500/15'
-                        : 'border-slate-700/70 bg-[#081022] text-slate-300 hover:border-slate-500 hover:text-white'
+                        ? 'border-emerald-500/50 bg-[#16A34A] text-white shadow-sm'
+                        : 'border-slate-700/70 bg-[#0B1220] text-slate-300 hover:border-slate-500 hover:text-white'
                     }`}
                   >
                     <span
-                      className={selected ? 'text-cyan-300' : 'text-slate-400'}
+                      className={selected ? 'text-white' : 'text-slate-400'}
                     >
                       {categoryIcons[cat.id]}
                     </span>
@@ -393,12 +393,12 @@ export const ScamAwarenessSection: React.FC<ScamAwarenessSectionProps> = ({
             </div>
 
             {/* Active Category Detail */}
-            <div className="mt-6 rounded-2xl border border-slate-800 bg-[#060D1E]/90 p-5">
+            <div className="mt-6 rounded-2xl border border-slate-800 bg-[#0B1220] p-5">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <h3 className="font-display text-xl font-bold text-white">
                   {t(activeCategory.title, lang)}
                 </h3>
-                <span className="rounded-full border border-blue-400/30 bg-blue-500/15 px-3 py-0.5 font-mono text-xs text-blue-300">
+                <span className="rounded-full border border-sky-400/30 bg-sky-500/15 px-3 py-0.5 font-mono text-xs text-[#38BDF8]">
                   {t(activeCategory.badge, lang)}
                 </span>
               </div>
@@ -468,11 +468,11 @@ export const ScamAwarenessSection: React.FC<ScamAwarenessSectionProps> = ({
                     onClick={() => toggleCheck(item.id)}
                     className={`flex w-full items-start gap-3 rounded-xl border p-3 text-left text-sm transition ${
                       isChecked
-                        ? 'border-cyan-400/45 bg-cyan-500/12 text-white'
-                        : 'border-slate-800 bg-[#070F22] text-slate-300 hover:border-slate-700'
+                        ? 'border-emerald-500/45 bg-emerald-500/12 text-white'
+                        : 'border-slate-800 bg-[#0B1220] text-slate-300 hover:border-slate-700'
                     }`}
                   >
-                    <span className="mt-0.5 shrink-0 text-cyan-400">
+                    <span className="mt-0.5 shrink-0 text-emerald-400">
                       {isChecked ? (
                         <CheckSquare className="h-4 w-4" />
                       ) : (
@@ -489,7 +489,7 @@ export const ScamAwarenessSection: React.FC<ScamAwarenessSectionProps> = ({
           <div
             className={`mt-5 rounded-xl border p-4 text-sm leading-relaxed transition ${
               checkedCount === 0
-                ? 'border-slate-800 bg-[#060D1E] text-slate-400'
+                ? 'border-slate-800 bg-[#0B1220] text-slate-400'
                 : checkedCount <= 2
                   ? 'border-amber-500/35 bg-amber-500/10 text-amber-200'
                   : 'border-rose-500/40 bg-rose-500/12 text-rose-200'
@@ -508,7 +508,7 @@ export const ScamAwarenessSection: React.FC<ScamAwarenessSectionProps> = ({
       {!compact && (
         <div className="mt-8 glass-panel rounded-2xl p-6 sm:p-8">
           <div className="flex items-center gap-2.5">
-            <PhoneCall className="h-5 w-5 text-cyan-400" />
+            <PhoneCall className="h-5 w-5 text-emerald-400" />
             <h3 className="font-display text-xl font-bold text-white">
               {t(translations.awareness.emergencyTitle, lang)}
             </h3>
@@ -517,9 +517,9 @@ export const ScamAwarenessSection: React.FC<ScamAwarenessSectionProps> = ({
             {translations.awareness.emergencySteps.map((step, idx) => (
               <div
                 key={idx}
-                className="rounded-xl border border-slate-800 bg-[#060D1E] p-4"
+                className="rounded-xl border border-slate-800 bg-[#0B1220] p-4"
               >
-                <span className="font-mono text-xs font-semibold text-cyan-400">
+                <span className="font-mono text-xs font-semibold text-emerald-400">
                   {t(translations.awareness.stepPrefix, lang)} 0{idx + 1}
                 </span>
                 <h4 className="mt-1 font-display text-base font-bold text-white">
