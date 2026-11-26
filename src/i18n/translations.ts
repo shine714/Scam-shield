@@ -205,7 +205,7 @@ export const translations = {
     ],
   },
   messageScanner: {
-    badge: { en: 'PHASE 2 • AI MESSAGE ANALYSIS', hi: 'चरण 2 • AI मैसेज विश्लेषण' },
+    badge: { en: 'AI MESSAGE ANALYSIS', hi: 'AI मैसेज विश्लेषण' },
     title: {
       en: 'AI Message Scam Scanner',
       hi: 'AI मैसेज स्कैम स्कैनर',
@@ -319,7 +319,7 @@ export const translations = {
     },
   },
   urlScanner: {
-    badge: { en: 'PHASE 3 • SAFE URL INSPECTION', hi: 'चरण 3 • सुरक्षित URL जाँच' },
+    badge: { en: 'SAFE URL INSPECTION', hi: 'सुरक्षित URL जाँच' },
     title: {
       en: 'URL Scam & Pattern Scanner',
       hi: 'URL स्कैम और पैटर्न स्कैनर',
@@ -551,35 +551,71 @@ export const translations = {
     ],
   },
   about: {
-    badge: { en: 'PROJECT ROADMAP & MISSION', hi: 'प्रोजेक्ट रोडमैप और मिशन' },
+    badge: { en: 'MISSION & ARCHITECTURE', hi: 'मिशन और सुरक्षा प्रणाली' },
     title: {
       en: 'About ScamShield AI',
       hi: 'ScamShield AI के बारे में',
     },
     subtitle: {
-      en: 'Built as a hackathon initiative to make digital fraud detection accessible, transparent, and bilingual for everyday internet users.',
-      hi: 'हर इंटरनेट उपयोगकर्ता के लिए डिजिटल धोखाधड़ी की पहचान को सरल, पारदर्शी और द्विभाषी बनाने की हैकाथॉन पहल।',
+      en: 'Built to make digital fraud detection accessible, transparent, and bilingual for everyday internet users.',
+      hi: 'हर इंटरनेट उपयोगकर्ता के लिए डिजिटल धोखाधड़ी की पहचान को सरल, पारदर्शी और द्विभाषी बनाने की पहल।',
     },
-    missionTitle: { en: 'Why We Are Building This', hi: 'हम इसे क्यों बना रहे हैं' },
+    missionTitle: { en: 'Our Mission', hi: 'हमारा उद्देश्य' },
     missionBody: {
       en: 'Millions of first-time digital payment users receive deceptive KYC alerts, fake courier links, and social-engineering scams every day. Existing security tools are often too technical or English-only. ScamShield AI bridges this gap with a clean SaaS interface, clear risk breakdowns, and full English & Hindi support.',
       hi: 'करोड़ों डिजिटल भुगतान उपयोगकर्ताओं को रोज़ाना नकली KYC संदेश, फ़र्ज़ी कूरियर लिंक और सोशल-इंजीनियरिंग कॉल मिलते हैं। अधिकांश सुरक्षा टूल तकनीकी या केवल अंग्रेज़ी में होते हैं। ScamShield AI सरल UI और हिंदी-अंग्रेज़ी सहायता के साथ इस अंतर को पाटता है।',
     },
-    roadmapTitle: { en: 'Transparent Hackathon Phases', hi: 'पारदर्शी हैकाथॉन चरण' },
-    phase1Title: { en: 'Phase 1: Frontend & UX (Completed)', hi: 'चरण 1: फ्रंटएंड और UX (पूर्ण)' },
+    roadmapTitle: {
+      en: 'Platform Capabilities & Protection Layers',
+      hi: 'प्लेटफ़ॉर्म क्षमताएँ और सुरक्षा स्तर',
+    },
+    phase1Title: {
+      en: 'Core Detection & User Experience',
+      hi: 'मुख्य जाँच और उपयोगकर्ता अनुभव',
+    },
     phase1Items: [
-      { en: 'Responsive dark-navy SaaS cybersecurity interface', hi: 'रिस्पॉन्सिव डार्क-नेवी साइबर सुरक्षा इंटरफ़ेस' },
-      { en: 'Interactive Message Scanner & URL Scanner layouts', hi: 'इंटरैक्टिव मैसेज और URL स्कैनर लेआउट' },
-      { en: 'Clearly labeled sample/demo threat telemetry states', hi: 'स्पष्ट रूप से लेबल किए गए सैंपल/डेमो परिणाम' },
-      { en: 'Full English & Hindi bilingual UI toggle', hi: 'पूर्ण अंग्रेज़ी और हिंदी द्विभाषी UI टॉगल' },
-      { en: 'Scam Awareness hub & interactive Red-Flag checklist', hi: 'स्कैम जागरूकता केंद्र और चेतावनी चेकलिस्ट' },
+      {
+        en: 'Real-time AI analysis for SMS, WhatsApp, email, and text',
+        hi: 'SMS, WhatsApp, ईमेल और टेक्स्ट का तुरंत AI विश्लेषण',
+      },
+      {
+        en: 'Zero-visit static URL & phishing pattern inspection',
+        hi: 'लिंक खोले बिना सुरक्षित URL और फ़िशिंग पैटर्न जाँच',
+      },
+      {
+        en: 'Clear 0–100 risk scoring with highlighted red flags',
+        hi: '0–100 रिस्क स्कोर और स्पष्ट खतरे के संकेत',
+      },
+      {
+        en: 'Full English & Hindi bilingual accessibility',
+        hi: 'पूर्ण अंग्रेज़ी और सरल हिंदी भाषा सहायता',
+      },
+      {
+        en: 'Interactive Scam Awareness hub & self-check guide',
+        hi: 'इंटरैक्टिव स्कैम जागरूकता केंद्र और स्व-जाँच गाइड',
+      },
     ],
-    phase2Title: { en: 'Phase 2–5: Live Defense & Bilingual AI', hi: 'चरण 2–5: लाइव सुरक्षा और द्विभाषी AI' },
+    phase2Title: {
+      en: 'Security & Threat Intelligence Standards',
+      hi: 'सुरक्षा और थ्रेट इंटेलिजेंस मानक',
+    },
     phase2Items: [
-      { en: 'Secure backend AI message scam detection API (Active)', hi: 'सुरक्षित बैकएंड AI मैसेज स्कैम जाँच API (सक्रिय)' },
-      { en: 'Zero-visit URL heuristic & optional Safe Browsing check (Active)', hi: 'लिंक खोले बिना URL पैटर्न और प्रतिष्ठा जाँच (सक्रिय)' },
-      { en: 'Full English & Hindi UI and easy-to-read AI explanations (Active)', hi: 'पूर्ण अंग्रेज़ी और सरल हिंदी UI व AI व्याख्या (सक्रिय)' },
-      { en: 'Multilingual OCR screenshot scam scanner (Planned)', hi: 'स्क्रीनशॉट से स्कैम पहचानने वाला OCR स्कैनर (आगामी)' },
+      {
+        en: 'Server-side AI & threat APIs with zero browser key exposure',
+        hi: 'सुरक्षित सर्वर-साइड AI और API—ब्राउज़र में कोई कुंजी साझा नहीं',
+      },
+      {
+        en: 'Optional Google Safe Browsing v4 database verification',
+        hi: 'वैकल्पिक Google Safe Browsing v4 थ्रेट डेटाबेस जाँच',
+      },
+      {
+        en: 'Transparent accuracy disclaimers on AI & heuristic results',
+        hi: 'AI और पैटर्न परिणामों पर स्पष्ट पारदर्शी सुरक्षा सूचना',
+      },
+      {
+        en: 'Actionable emergency reporting steps for 1930 & cybercrime.gov.in',
+        hi: '1930 और cybercrime.gov.in पर तुरंत शिकायत का मार्गदर्शन',
+      },
     ],
     privacyTitle: { en: 'Privacy-First Design Principle', hi: 'गोपनीयता-प्रथम डिज़ाइन सिद्धांत' },
     privacyBody: {
@@ -597,7 +633,7 @@ export const translations = {
   },
   footer: {
     desc: {
-      en: 'Hackathon AI-powered scam & phishing defense platform with bilingual English & Hindi support.',
+      en: 'AI-powered scam & phishing defense platform with bilingual English & Hindi support.',
       hi: 'अंग्रेज़ी और हिंदी सहायता के साथ AI-आधारित स्कैम और फ़िशिंग सुरक्षा प्लेटफ़ॉर्म।',
     },
     quickLinks: { en: 'Navigation', hi: 'नेविगेशन' },
@@ -611,16 +647,16 @@ export const translations = {
       hi: 'राष्ट्रीय पोर्टल: cybercrime.gov.in',
     },
     statusLabel: {
-      en: 'Status: AI Message & Safe URL Defense',
-      hi: 'स्थिति: AI मैसेज और सुरक्षित URL सुरक्षा',
+      en: 'AI Message & Zero-Visit URL Protection',
+      hi: 'AI मैसेज और सुरक्षित URL सुरक्षा',
     },
     copyright: {
-      en: 'ScamShield AI • Hackathon Project',
-      hi: 'ScamShield AI • हैकाथॉन प्रोजेक्ट',
+      en: '© 2026 ScamShield AI • Digital Fraud Defense',
+      hi: '© 2026 ScamShield AI • डिजिटल फ्रॉड सुरक्षा',
     },
     designTag: {
-      en: 'Dark Navy Cyber SaaS • EN / हिन्दी',
-      hi: 'डार्क नेवी साइबर सुरक्षा • EN / हिन्दी',
+      en: 'Bilingual Cyber Defense • EN / हिन्दी',
+      hi: 'द्विभाषी साइबर सुरक्षा • EN / हिन्दी',
     },
   },
   riskLabels: {

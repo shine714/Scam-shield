@@ -1,4 +1,5 @@
 import net from 'node:net';
+import { readEnvValue } from './envHelper.js';
 const PLACEHOLDER_KEYS = new Set([
     'your_safe_browsing_api_key',
     'your_google_safe_browsing_api_key',
@@ -135,8 +136,8 @@ export class InvalidUrlError extends Error {
     }
 }
 export function getSafeBrowsingApiKey() {
-    const raw = process.env.GOOGLE_SAFE_BROWSING_API_KEY?.trim() ||
-        process.env.SAFE_BROWSING_API_KEY?.trim();
+    const raw = readEnvValue('GOOGLE_SAFE_BROWSING_API_KEY') ||
+        readEnvValue('SAFE_BROWSING_API_KEY');
     if (!raw)
         return null;
     if (PLACEHOLDER_KEYS.has(raw.toLowerCase()))

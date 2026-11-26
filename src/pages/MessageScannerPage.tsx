@@ -111,7 +111,7 @@ export const MessageScannerPage: React.FC<MessageScannerPageProps> = ({
     setIsScanning(true);
 
     const controller = new AbortController();
-    const timeoutId = window.setTimeout(() => controller.abort(), 25_000);
+    const timeoutId = window.setTimeout(() => controller.abort(), 50_000);
 
     try {
       const res = await fetch('/api/analyze-message', {
@@ -375,7 +375,7 @@ export const MessageScannerPage: React.FC<MessageScannerPageProps> = ({
               </div>
               <textarea
                 id="message-scanner-input"
-                rows={8}
+                rows={6}
                 value={messageText}
                 onChange={(e) => {
                   setMessageText(e.target.value);
@@ -386,7 +386,7 @@ export const MessageScannerPage: React.FC<MessageScannerPageProps> = ({
                   translations.messageScanner.textareaPlaceholder,
                   lang
                 )}
-                className="mt-2 w-full rounded-2xl border border-slate-700/80 bg-[#050B18] p-4 font-sans text-sm leading-relaxed text-slate-100 placeholder-slate-500 transition focus:border-cyan-400/60 focus:outline-none focus:ring-2 focus:ring-cyan-500/20"
+                className="mt-2 min-h-[156px] w-full rounded-2xl border border-slate-700/80 bg-[#050B18] p-4 font-sans text-sm leading-relaxed text-slate-100 placeholder-slate-500 transition focus:border-cyan-400/60 focus:outline-none focus:ring-2 focus:ring-cyan-500/20"
               />
             </div>
 

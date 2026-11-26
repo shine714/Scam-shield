@@ -72,21 +72,23 @@ export function App() {
         />
 
         <main className="flex-1">
-          {currentPage === 'home' && (
-            <LandingPage lang={lang} onNavigate={navigateTo} />
-          )}
-          {currentPage === 'message-scanner' && (
-            <MessageScannerPage lang={lang} />
-          )}
-          {currentPage === 'url-scanner' && <UrlScannerPage lang={lang} />}
-          {currentPage === 'awareness' && (
-            <div className="pt-4">
-              <ScamAwarenessSection lang={lang} />
-            </div>
-          )}
-          {currentPage === 'about' && (
-            <AboutPage lang={lang} onNavigate={navigateTo} />
-          )}
+          <div key={currentPage} className="animate-fade-in-up">
+            {currentPage === 'home' && (
+              <LandingPage lang={lang} onNavigate={navigateTo} />
+            )}
+            {currentPage === 'message-scanner' && (
+              <MessageScannerPage lang={lang} />
+            )}
+            {currentPage === 'url-scanner' && <UrlScannerPage lang={lang} />}
+            {currentPage === 'awareness' && (
+              <div className="pt-4">
+                <ScamAwarenessSection lang={lang} />
+              </div>
+            )}
+            {currentPage === 'about' && (
+              <AboutPage lang={lang} onNavigate={navigateTo} />
+            )}
+          </div>
         </main>
 
         <Footer lang={lang} onNavigate={navigateTo} />

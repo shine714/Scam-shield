@@ -1,15 +1,23 @@
 import { GoogleGenAI } from '@google/genai';
+import { readEnvValue } from './envHelper.js';
 import { AI_RESPONSE_JSON_SCHEMA, AiMessageAnalysisSchema, } from './schema.js';
-export const DEFAULT_GEMINI_MODEL = 'gemini-3.8-flash';
-export const DEFAULT_AI_TIMEOUT_MS = 20_000;
+export const DEFAULT_GEMINI_MODEL = 'gemini-3.5-flash-lite';
+export const FALLBACK_GEMINI_MODELS = [
+    'gemini-3.5-flash-lite',
+    'gemini-3.1-flash-lite',
+    'gemini-3.8-flash',
+];
+export const DEFAULT_AI_TIMEOUT_MS = 35_000;
 const PLACEHOLDER_KEYS = new Set([
     'your_gemini_api_key',
     'your_gemini_api_key_here',
+    'yahan_apni_real_api_key_paste_karein',
+    'your_actual_gemini_api_key',
     'replace_me',
     'changeme',
 ]);
 export function getConfiguredApiKey() {
-    const raw = process.env.GEMINI_API_KEY?.trim();
+    const raw = readEnvValue('GEMINI_API_KEY');
     if (!raw)
         return null;
     if (PLACEHOLDER_KEYS.has(raw.toLowerCase()))
@@ -20,7 +28,7 @@ export function isAiConfigured() {
     return getConfiguredApiKey() !== null;
 }
 export function getActiveModel() {
-    return process.env.GEMINI_MODEL?.trim() || DEFAULT_GEMINI_MODEL;
+    return readEnvValue('GEMINI_MODEL') || DEFAULT_GEMINI_MODEL;
 }
 export class AiNotConfiguredError extends Error {
     code = 'AI_NOT_CONFIGURED';
@@ -66,7 +74,8 @@ export function createGeminiMessageAnalyzer(timeoutMs = DEFAULT_AI_TIMEOUT_MS) {
             if (!apiKey) {
                 throw new AiNotConfiguredError();
             }
-            const model = getActiveModel();
+            const primaryModel = getActiveModel();
+            const candidateModels = Array.from(new Set([primaryModel, ...FALLBACK_GEMINI_MODELS]));
             const client = new GoogleGenAI({ apiKey });
             const userPrompt = [
                 `Source Channel: ${input.channel.toUpperCase()}`,
@@ -75,76 +84,115 @@ export function createGeminiMessageAnalyzer(timeoutMs = DEFAULT_AI_TIMEOUT_MS) {
                 input.message,
                 '--- END UNTRUSTED MESSAGE TO ANALYZE ---',
             ].join('\n');
-            let timeoutId;
-            const timeoutPromise = new Promise((_, reject) => {
-                timeoutId = setTimeout(() => {
-                    reject(new AiAnalysisError('AI analysis timed out before the model responded. Please try again.', 504, 'AI_TIMEOUT'));
-                }, timeoutMs);
-            });
-            try {
-                const interaction = await Promise.race([
-                    client.interactions.create({
-                        model,
-                        system_instruction: SYSTEM_INSTRUCTION,
-                        input: userPrompt,
-                        store: false,
-                        response_format: {
-                            type: 'text',
-                            mime_type: 'application/json',
-                            schema: AI_RESPONSE_JSON_SCHEMA,
-                        },
-                    }, { timeout_ms: timeoutMs }),
-                    timeoutPromise,
-                ]);
-                const rawText = interaction.output_text?.trim();
-                if (!rawText) {
-                    throw new AiAnalysisError('AI provider returned an empty response.', 502);
-                }
-                let parsedJson;
+            let lastErr;
+            for (let i = 0; i < candidateModels.length; i++) {
+                const model = candidateModels[i];
+                const hasFallback = i < candidateModels.length - 1;
+                let timeoutId;
+                const timeoutPromise = new Promise((_, reject) => {
+                    timeoutId = setTimeout(() => {
+                        reject(new AiAnalysisError('AI analysis timed out before the model responded. Please try again.', 504, 'AI_TIMEOUT'));
+                    }, timeoutMs);
+                });
                 try {
-                    parsedJson = JSON.parse(rawText);
+                    const interaction = await Promise.race([
+                        client.interactions.create({
+                            model,
+                            system_instruction: SYSTEM_INSTRUCTION,
+                            input: userPrompt,
+                            store: false,
+                            generation_config: {
+                                thinking_level: 'minimal',
+                            },
+                            response_format: {
+                                type: 'text',
+                                mime_type: 'application/json',
+                                schema: AI_RESPONSE_JSON_SCHEMA,
+                            },
+                        }, {
+                            timeout_ms: timeoutMs,
+                            retries: { strategy: 'none' },
+                        }),
+                        timeoutPromise,
+                    ]);
+                    const rawText = interaction.output_text?.trim();
+                    if (!rawText) {
+                        throw new AiAnalysisError('AI provider returned an empty response.', 502);
+                    }
+                    let parsedJson;
+                    try {
+                        parsedJson = JSON.parse(rawText);
+                    }
+                    catch {
+                        throw new AiAnalysisError('AI provider returned invalid JSON output.', 502);
+                    }
+                    const validated = AiMessageAnalysisSchema.safeParse(parsedJson);
+                    if (!validated.success) {
+                        throw new AiAnalysisError('AI response did not match expected safety analysis schema.', 502);
+                    }
+                    const normalized = {
+                        ...validated.data,
+                        riskScore: Math.round(Math.max(0, Math.min(100, validated.data.riskScore))),
+                        flaggedPhrases: validated.data.flaggedPhrases.slice(0, 6),
+                    };
+                    return { analysis: normalized, model };
                 }
-                catch {
-                    throw new AiAnalysisError('AI provider returned invalid JSON output.', 502);
+                catch (err) {
+                    lastErr = err;
+                    if (err instanceof AiNotConfiguredError) {
+                        throw err;
+                    }
+                    const status = typeof err === 'object' &&
+                        err !== null &&
+                        'status' in err &&
+                        typeof err.status === 'number'
+                        ? err.status
+                        : err instanceof AiAnalysisError
+                            ? err.statusCode
+                            : 502;
+                    const isRetryableLoadIssue = status === 429 ||
+                        status === 503 ||
+                        status === 504 ||
+                        (err instanceof AiAnalysisError && err.code === 'AI_TIMEOUT');
+                    if (hasFallback && isRetryableLoadIssue) {
+                        console.warn(`[ScamShield AI] Model "${model}" unavailable (${status}); trying fallback model...`);
+                        continue;
+                    }
+                    if (err instanceof AiAnalysisError) {
+                        throw err;
+                    }
+                    const rawBody = typeof err === 'object' &&
+                        err !== null &&
+                        'body' in err &&
+                        typeof err.body === 'string'
+                        ? err.body
+                        : '';
+                    if (status === 401 ||
+                        status === 403 ||
+                        /API_KEY_INVALID|API key not valid/i.test(rawBody)) {
+                        throw new AiAnalysisError('AI authentication failed. Check that GEMINI_API_KEY in .env is valid.', 502, 'AI_ANALYSIS_FAILED', {
+                            en: 'AI authentication failed. Check that GEMINI_API_KEY in .env is valid.',
+                            hi: 'AI सेवा की API कुंजी (GEMINI_API_KEY) मान्य नहीं है। कृपया .env फ़ाइल में सही कुंजी डालें।',
+                        });
+                    }
+                    if (status === 429) {
+                        throw new AiAnalysisError('AI rate limit or quota exceeded. Please try again shortly.', 429);
+                    }
+                    if (err instanceof Error &&
+                        (err.name === 'AbortError' || /timeout|timed out/i.test(err.message))) {
+                        throw new AiAnalysisError('AI analysis timed out before the model responded. Please try again.', 504, 'AI_TIMEOUT');
+                    }
+                    console.error('[ScamShield AI Error]', err);
+                    throw new AiAnalysisError('AI analysis request failed due to an upstream service error. Please try again shortly.', 502);
                 }
-                const validated = AiMessageAnalysisSchema.safeParse(parsedJson);
-                if (!validated.success) {
-                    throw new AiAnalysisError('AI response did not match expected safety analysis schema.', 502);
+                finally {
+                    if (timeoutId !== undefined) {
+                        clearTimeout(timeoutId);
+                    }
                 }
-                const normalized = {
-                    ...validated.data,
-                    riskScore: Math.round(Math.max(0, Math.min(100, validated.data.riskScore))),
-                    flaggedPhrases: validated.data.flaggedPhrases.slice(0, 6),
-                };
-                return { analysis: normalized, model };
             }
-            catch (err) {
-                if (err instanceof AiNotConfiguredError || err instanceof AiAnalysisError) {
-                    throw err;
-                }
-                const status = typeof err === 'object' &&
-                    err !== null &&
-                    'status' in err &&
-                    typeof err.status === 'number'
-                    ? err.status
-                    : 502;
-                if (status === 401 || status === 403) {
-                    throw new AiAnalysisError('AI authentication failed. Check that GEMINI_API_KEY in .env is valid.', 502);
-                }
-                if (status === 429) {
-                    throw new AiAnalysisError('AI rate limit or quota exceeded. Please try again shortly.', 429);
-                }
-                if (err instanceof Error && (err.name === 'AbortError' || /timeout|timed out/i.test(err.message))) {
-                    throw new AiAnalysisError('AI analysis timed out before the model responded. Please try again.', 504, 'AI_TIMEOUT');
-                }
-                console.error('[ScamShield AI Error]', err);
-                throw new AiAnalysisError('AI analysis request failed due to an upstream service error. Please try again shortly.', 502);
-            }
-            finally {
-                if (timeoutId !== undefined) {
-                    clearTimeout(timeoutId);
-                }
-            }
+            console.error('[ScamShield AI Error]', lastErr);
+            throw new AiAnalysisError('AI analysis request failed due to temporary model unavailability. Please try again shortly.', 503);
         },
     };
 }
